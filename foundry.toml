@@ -1,10 +1,10 @@
 [profile.default]
+  bytecode_hash = "none"
   evm_version = "paris"
   optimizer = true
   optimizer_runs = 10_000_000
   solc_version = "0.8.20"
   verbosity = 3
-  bytecode_hash = "none"
 
 [profile.ci]
   fuzz = { runs = 5000 }
