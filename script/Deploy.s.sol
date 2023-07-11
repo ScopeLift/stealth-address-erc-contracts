@@ -10,7 +10,7 @@ contract Deploy is Script {
   ERC5564Announcer announcer;
 
   function run() public {
-    vm.startBroadcast();
+    vm.broadcast();
     announcer = new ERC5564Announcer();
   }
 }
