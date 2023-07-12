@@ -31,4 +31,21 @@ contract Announce is ERC5564AnnouncerTest {
     emit Announcement(schemeId, stealthAddress, caller, ephemeralPubKey, metadata);
     announcer.announce(schemeId, stealthAddress, ephemeralPubKey, metadata);
   }
+
+  // This test is a subset of `testFuzz_EmitsAnnouncementEvent`, and is mainly present to make
+  // the `announce` method's specification more explicit. For this reason, we set the number of runs
+  // to 1 for all profiles.
+  /// forge-config: default.fuzz.runs = 1
+  /// forge-config: ci.fuzz.runs = 1
+  /// forge-config: lite.fuzz.runs = 1
+  function testFuzz_NeverReverts(
+    uint256 schemeId,
+    address stealthAddress,
+    address caller,
+    bytes memory ephemeralPubKey,
+    bytes memory metadata
+  ) external {
+    vm.prank(caller);
+    announcer.announce(schemeId, stealthAddress, ephemeralPubKey, metadata);
+  }
 }
