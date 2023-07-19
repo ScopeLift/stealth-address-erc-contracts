@@ -13,7 +13,7 @@ contract ERC6538Registry is IERC6538Registry {
 
   /// @inheritdoc IERC6538Registry
   function registerKeys(uint256 schemeId, bytes memory stealthMetaAddress) external {
-    bytes memory registrant = toBytes(msg.sender);
+    bytes memory registrant = _toBytes(msg.sender);
     stealthMetaAddressOf[registrant][schemeId] = stealthMetaAddress;
     emit StealthMetaAddressSet(registrant, schemeId, stealthMetaAddress);
   }
@@ -24,20 +24,22 @@ contract ERC6538Registry is IERC6538Registry {
     uint256 schemeId,
     bytes memory signature,
     bytes memory stealthMetaAddress
-  ) external {
-    registerKeysOnBehalf(toBytes(registrant), schemeId, signature, stealthMetaAddress);
+  ) external pure {
+    registerKeysOnBehalf(_toBytes(registrant), schemeId, signature, stealthMetaAddress);
   }
 
   /// @inheritdoc IERC6538Registry
   function registerKeysOnBehalf(
-    bytes memory registrant,
-    uint256 schemeId,
-    bytes memory signature,
-    bytes memory stealthMetaAddress
-  ) public {}
+    bytes memory, // registrant
+    uint256, // schemeId
+    bytes memory, // signature
+    bytes memory // stealthMetaAddress
+  ) public pure {
+    revert("not implemented");
+  }
 
   /// @dev Converts an `address` to `bytes`.
-  function toBytes(address who) internal pure returns (bytes memory) {
+  function _toBytes(address who) internal pure returns (bytes memory) {
     return bytes.concat(bytes32(uint256(uint160(who))));
   }
 }

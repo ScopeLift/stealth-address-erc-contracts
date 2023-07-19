@@ -54,3 +54,17 @@ contract RegisterKeys is ERC6538RegistryTest {
     registry.registerKeys(schemeId, stealthMetaAddress);
   }
 }
+
+contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
+  function test_NotImplemented() external {
+    vm.expectRevert("not implemented");
+    registry.registerKeysOnBehalf(address(0), 0, "", "");
+  }
+}
+
+contract RegisterKeysOnBehalf_Bytes is ERC6538RegistryTest {
+  function test_NotImplemented() external {
+    vm.expectRevert("not implemented");
+    registry.registerKeysOnBehalf(bytes("0"), 0, "", "");
+  }
+}
