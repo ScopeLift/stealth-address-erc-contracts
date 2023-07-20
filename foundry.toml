@@ -1,4 +1,5 @@
 [profile.default]
+  bytecode_hash = "none"
   evm_version = "paris"
   optimizer = true
   optimizer_runs = 10_000_000

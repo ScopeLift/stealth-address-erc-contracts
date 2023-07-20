@@ -3,14 +3,14 @@
 
 pragma solidity 0.8.20;
 
-import "forge-std/Script.sol";
-import {Counter} from "src/Counter.sol";
+import {Script} from "forge-std/Script.sol";
+import {ERC5564Announcer} from "src/ERC5564Announcer.sol";
 
 contract Deploy is Script {
-  Counter counter;
+  ERC5564Announcer announcer;
 
   function run() public {
-    vm.startBroadcast();
-    counter = new Counter();
+    vm.broadcast();
+    announcer = new ERC5564Announcer();
   }
 }
