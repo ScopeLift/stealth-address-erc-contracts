@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 /// [ERC-5564](https://eips.ethereum.org/EIPS/eip-5564) to learn more.
 interface IERC5564Announcer {
   /// @dev Emitted when something is sent to a stealth address.
-  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
   /// secp256k1, as specified in ERC-5564.
   /// @param stealthAddress The computed stealth address for the recipient.
   /// @param caller The caller of the `announce` function that emitted this event.
@@ -24,7 +24,8 @@ interface IERC5564Announcer {
   );
 
   /// @dev Called by integrators to emit an `Announcement` event.
-  /// @param schemeId The applied stealth address scheme (such as secp25k1).
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
+  /// secp256k1, as specified in ERC-5564.
   /// @param stealthAddress The computed stealth address for the recipient.
   /// @param ephemeralPubKey Ephemeral public key used by the sender.
   /// @param metadata Arbitrary data to emit with the event. The first byte MUST be the view tag.

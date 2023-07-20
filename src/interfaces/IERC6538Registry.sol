@@ -6,7 +6,8 @@ pragma solidity ^0.8.0;
 interface IERC6538Registry {
   /// @dev Emitted when a registrant updates their stealth meta-address.
   /// @param registrant The account that registered the stealth meta-address.
-  /// @param schemeId The applied stealth address scheme (such as secp25k1).
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// secp256k1, as specified in ERC-5564.
   /// @param stealthMetaAddress The stealth meta-address.
   /// [ERC-5564](https://eips.ethereum.org/EIPS/eip-5564) bases the format for stealth
   /// meta-addresses on [ERC-3770](https://eips.ethereum.org/EIPS/eip-3770) and specifies them as:
@@ -19,13 +20,15 @@ interface IERC6538Registry {
   );
 
   /// @notice Sets the caller's stealth meta-address for the given scheme ID.
-  /// @param schemeId The applied stealth address scheme (such as secp25k1).
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// secp256k1, as specified in ERC-5564.
   /// @param stealthMetaAddress The stealth meta-address to register.
   function registerKeys(uint256 schemeId, bytes memory stealthMetaAddress) external;
 
-  /// @notice Sets the `registrant`s stealth meta-address for the given scheme ID.
+  /// @notice Sets the `registrant`'s stealth meta-address for the given scheme ID.
   /// @param registrant Address of the registrant.
-  /// @param schemeId The applied stealth address scheme (such as secp25k1).
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// secp256k1, as specified in ERC-5564.
   /// @param signature A signature from the `registrant` authorizing the registration.
   /// @param stealthMetaAddress The stealth meta-address to register.
   /// @dev Supports both EOA signatures and EIP-1271 signatures.
@@ -39,7 +42,8 @@ interface IERC6538Registry {
 
   /// @notice Sets the `registrant`s stealth meta-address for the given scheme ID.
   /// @param registrant Recipient identifier, such as an address.
-  /// @param schemeId The applied stealth address scheme (such as secp25k1).
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// secp256k1, as specified in ERC-5564.
   /// @param signature A signature from the `registrant` authorizing the registration.
   /// @param stealthMetaAddress The stealth meta-address to register.
   /// @dev Supports both EOA signatures and EIP-1271 signatures.
