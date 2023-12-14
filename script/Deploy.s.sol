@@ -13,9 +13,9 @@ contract Deploy is Script {
 
   function run() public {
     vm.broadcast();
-    announcer = new ERC5564Announcer();
+    announcer = new ERC5564Announcer{salt: ""}();
 
     vm.broadcast();
-    registry = new ERC6538Registry();
+    registry = new ERC6538Registry{salt: ""}();
   }
 }
