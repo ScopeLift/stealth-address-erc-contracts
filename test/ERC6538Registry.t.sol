@@ -52,7 +52,7 @@ contract RegisterKeys is ERC6538RegistryTest {
 }
 
 contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
-  function test_RevertIfNoSignatureIsProvided() external {
+  function test_RevertIf_NoSignatureIsProvided() external {
     vm.expectRevert("Invalid signature");
     registry.registerKeysOnBehalf(address(0), 0, "", "");
   }
