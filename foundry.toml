@@ -5,6 +5,7 @@
   optimizer_runs = 10_000_000
   solc_version = "0.8.20"
   verbosity = 3
+  remappings = ["@openzeppelin/contracts=lib/openzeppelin-contracts/contracts"]
 
 [profile.ci]
   fuzz = { runs = 5000 }

@@ -6,15 +6,11 @@ import {Deploy} from "script/Deploy.s.sol";
 
 contract ERC6538RegistryTest is Test, Deploy {
   event StealthMetaAddressSet(
-    bytes indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
+    address indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
   );
 
   function setUp() public {
     Deploy.run();
-  }
-
-  function toBytes(address who) internal pure returns (bytes memory) {
-    return bytes.concat(bytes32(uint256(uint160(who))));
   }
 }
 
@@ -26,7 +22,7 @@ contract RegisterKeys is ERC6538RegistryTest {
   ) external {
     vm.prank(caller);
     vm.expectEmit();
-    emit StealthMetaAddressSet(toBytes(caller), schemeId, stealthMetaAddress);
+    emit StealthMetaAddressSet(caller, schemeId, stealthMetaAddress);
     registry.registerKeys(schemeId, stealthMetaAddress);
   }
 
@@ -35,10 +31,10 @@ contract RegisterKeys is ERC6538RegistryTest {
     uint256 schemeId,
     bytes memory stealthMetaAddress
   ) external {
-    assertEq(registry.stealthMetaAddressOf(toBytes(caller), schemeId), "");
+    assertEq(registry.stealthMetaAddressOf((caller), schemeId), "");
     vm.prank(caller);
     registry.registerKeys(schemeId, stealthMetaAddress);
-    assertEq(registry.stealthMetaAddressOf(toBytes(caller), schemeId), stealthMetaAddress);
+    assertEq(registry.stealthMetaAddressOf((caller), schemeId), stealthMetaAddress);
   }
 
   // This test is a subset of `testFuzz_EmitsStealthMetaAddressSetEvent`, and is mainly present to
@@ -56,15 +52,8 @@ contract RegisterKeys is ERC6538RegistryTest {
 }
 
 contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
-  function test_NotImplemented() external {
-    vm.expectRevert("not implemented");
+  function test_RevertIfNoSignatureIsProvided() external {
+    vm.expectRevert("Invalid signature");
     registry.registerKeysOnBehalf(address(0), 0, "", "");
-  }
-}
-
-contract RegisterKeysOnBehalf_Bytes is ERC6538RegistryTest {
-  function test_NotImplemented() external {
-    vm.expectRevert("not implemented");
-    registry.registerKeysOnBehalf(bytes("0"), 0, "", "");
   }
 }
