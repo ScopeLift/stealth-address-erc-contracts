@@ -12,10 +12,12 @@ contract Deploy is Script {
   ERC6538Registry registry;
 
   function run() public {
+    // Nice to have: Check address matches the expected one
     vm.broadcast();
     announcer = new ERC5564Announcer{salt: ""}();
 
     vm.broadcast();
     registry = new ERC6538Registry{salt: ""}();
+    // Check here
   }
 }

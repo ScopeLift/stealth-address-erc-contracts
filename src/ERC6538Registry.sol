@@ -10,7 +10,7 @@ contract ERC6538Registry is IERC6538Registry {
   /// @notice Maps a registrant's identifier to the scheme ID to the stealth meta-address.
   /// @dev `registrant` may be a standard 160-bit address or any other identifier.
   /// @dev `schemeId` is an integer identifier for the stealth address scheme.
-  mapping(address registrant => mapping(uint256 schemeId => bytes)) public stealthMetaAddressOf;
+  mapping(address registrant => mapping(uint256 schemeId => bytes stealthMetaAddress)) public stealthMetaAddressOf;
 
   /// @inheritdoc IERC6538Registry
   function registerKeys(uint256 schemeId, bytes memory stealthMetaAddress) external {
@@ -25,6 +25,7 @@ contract ERC6538Registry is IERC6538Registry {
     bytes memory signature,
     bytes memory stealthMetaAddress
   ) external {
+    // Check for nonce
     bytes32 digest = keccak256(abi.encode(registrant, schemeId, stealthMetaAddress));
     require(
       SignatureChecker.isValidSignatureNow(registrant, digest, signature), "Invalid signature"

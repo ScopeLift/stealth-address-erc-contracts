@@ -52,6 +52,17 @@ contract RegisterKeys is ERC6538RegistryTest {
 }
 
 contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
+  function testFuzz_SignatureIsValid(uint256 schemeId, bytes memory stealthMetaAddress) external {
+    (address alice, uint256 alicePk) = makeAddrAndKey("alice");
+    bytes32 hash = keccak256(abi.encode(alice, schemeId, stealthMetaAddress));
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    vm.expectEmit(true, true, true, true);
+    emit StealthMetaAddressSet(alice, schemeId, stealthMetaAddress);
+    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
+  }
+
   function test_RevertIf_NoSignatureIsProvided() external {
     vm.expectRevert("Invalid signature");
     registry.registerKeysOnBehalf(address(0), 0, "", "");
