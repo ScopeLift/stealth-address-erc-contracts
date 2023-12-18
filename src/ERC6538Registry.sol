@@ -13,11 +13,37 @@ contract ERC6538Registry is IERC6538Registry {
     stealthMetaAddressOf;
   mapping(address user => uint256 nonce) public nonceOf;
 
+  bytes32 private constant TYPE_HASH =
+    keccak256("EIP712Domain(string name,string version,uint256 chainId,address registryContract)");
+
+  // Cache the domain separator as an immutable value, but also store the chain id that it
+  // corresponds to, in order to
+  // invalidate the cached domain separator if the chain id changes.
+  bytes32 private immutable _cachedDomainSeparator;
+  uint256 private immutable _cachedChainId;
+  address private immutable _cachedThis;
+
+  bytes32 private immutable _hashedName;
+  bytes32 private immutable _hashedVersion;
+
+  string private _name;
+  string private _version;
+
   enum RecoverError {
     NoError,
     InvalidSignature,
     InvalidSignatureLength,
     InvalidSignatureS
+  }
+
+  constructor() {
+    _name = "ERC6538Registry";
+    _version = "1";
+    _hashedName = keccak256(bytes("ERC6538Registry"));
+    _hashedVersion = keccak256(bytes("1"));
+    _cachedChainId = block.chainid;
+    _cachedDomainSeparator = _buildDomainSeparator();
+    _cachedThis = address(this);
   }
 
   /// @inheritdoc IERC6538Registry
@@ -34,11 +60,75 @@ contract ERC6538Registry is IERC6538Registry {
     bytes memory stealthMetaAddress
   ) external {
     // Check for nonce
-    bytes32 digest =
-      keccak256(abi.encode(registrant, schemeId, stealthMetaAddress, nonceOf[registrant]++));
+    bytes32 digest = _hashTypedDataV4(
+      keccak256(
+        abi.encode(TYPE_HASH, registrant, schemeId, stealthMetaAddress, nonceOf[registrant]++)
+      )
+    );
     require(isValidSignatureNow(registrant, digest, signature), "Invalid signature");
     stealthMetaAddressOf[registrant][schemeId] = stealthMetaAddress;
     emit StealthMetaAddressSet(registrant, schemeId, stealthMetaAddress);
+  }
+
+  /**
+   * @dev Returns the domain separator for the current chain.
+   */
+  function _domainSeparatorV4() public view returns (bytes32) {
+    if (address(this) == _cachedThis && block.chainid == _cachedChainId) {
+      return _cachedDomainSeparator;
+    } else {
+      return _buildDomainSeparator();
+    }
+  }
+
+  function _buildDomainSeparator() private view returns (bytes32) {
+    return
+      keccak256(abi.encode(TYPE_HASH, _hashedName, _hashedVersion, block.chainid, address(this)));
+  }
+
+  /**
+   * @dev Given an already https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct[hashed
+   * struct], this
+   * function returns the hash of the fully encoded EIP712 message for this domain.
+   *
+   * This hash can be used together with {ECDSA-recover} to obtain the signer of a message. For
+   * example:
+   *
+   * ```solidity
+   * bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
+   *     keccak256("Mail(address to,string contents)"),
+   *     mailTo,
+   *     keccak256(bytes(mailContents))
+   * )));
+   * address signer = ECDSA.recover(digest, signature);
+   * ```
+   */
+  function _hashTypedDataV4(bytes32 structHash) internal view virtual returns (bytes32) {
+    return toTypedDataHash(_domainSeparatorV4(), structHash);
+  }
+
+  /**
+   * @dev Returns the keccak256 digest of an EIP-712 typed data (ERC-191 version `0x01`).
+   *
+   * The digest is calculated from a `domainSeparator` and a `structHash`, by prefixing them with
+   * `\x19\x01` and hashing the result. It corresponds to the hash signed by the
+   * https://eips.ethereum.org/EIPS/eip-712[`eth_signTypedData`] JSON-RPC method as part of EIP-712.
+   *
+   * See {ECDSA-recover}.
+   */
+  function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash)
+    internal
+    pure
+    returns (bytes32 digest)
+  {
+    /// @solidity memory-safe-assembly
+    assembly {
+      let ptr := mload(0x40)
+      mstore(ptr, hex"1901")
+      mstore(add(ptr, 0x02), domainSeparator)
+      mstore(add(ptr, 0x22), structHash)
+      digest := keccak256(ptr, 0x42)
+    }
   }
 
   /**
