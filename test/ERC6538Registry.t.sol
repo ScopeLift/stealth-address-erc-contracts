@@ -58,13 +58,33 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     bytes memory stealthMetaAddress
   ) external {
     (address alice, uint256 alicePk) = makeAddrAndKey(name);
-    bytes32 hash = keccak256(abi.encode(alice, schemeId, stealthMetaAddress));
+    bytes32 hash = keccak256(abi.encode(alice, schemeId, stealthMetaAddress, 0));
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
 
     vm.expectEmit(true, true, true, true);
     emit StealthMetaAddressSet(alice, schemeId, stealthMetaAddress);
     registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
+  }
+
+  function testFuzz_UpdateStealthMetaAddress(
+    string memory name,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress,
+    uint256 numOfUpdates
+  ) external {
+    numOfUpdates = bound(numOfUpdates, 1, 50);
+    (address alice, uint256 alicePk) = makeAddrAndKey(name);
+
+    for (uint256 nonce = 0; nonce < numOfUpdates; nonce++) {
+      bytes32 hash = keccak256(abi.encode(alice, schemeId, stealthMetaAddress, nonce));
+      (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
+      bytes memory signature = abi.encodePacked(r, s, v);
+
+      vm.expectEmit(true, true, true, true);
+      emit StealthMetaAddressSet(alice, schemeId, stealthMetaAddress);
+      registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
+    }
   }
 
   function testFuzz_RevertIf_SignatureIsNotValid(
@@ -74,12 +94,28 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     bytes memory stealthMetaAddress
   ) external {
     (address alice, uint256 alicePk) = makeAddrAndKey(name);
-    bytes32 hash = keccak256(abi.encode(alice, schemeId, stealthMetaAddress));
+    bytes32 hash = keccak256(abi.encode(alice, schemeId, stealthMetaAddress, 0));
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
 
     vm.expectRevert("Invalid signature");
     registry.registerKeysOnBehalf(bob, schemeId, signature, stealthMetaAddress);
+  }
+
+  function testFuzz_RevertIf_WrongNonce(
+    string memory name,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress,
+    uint256 nonce
+  ) external {
+    vm.assume(nonce != 0);
+    (address alice, uint256 alicePk) = makeAddrAndKey(name);
+    bytes32 hash = keccak256(abi.encode(alice, schemeId, stealthMetaAddress, nonce));
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    vm.expectRevert("Invalid signature");
+    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
   }
 
   function test_RevertIf_NoSignatureIsProvided() external {

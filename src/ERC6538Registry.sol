@@ -11,6 +11,7 @@ contract ERC6538Registry is IERC6538Registry {
   /// @dev `schemeId` is an integer identifier for the stealth address scheme.
   mapping(address registrant => mapping(uint256 schemeId => bytes stealthMetaAddress)) public
     stealthMetaAddressOf;
+  mapping(address user => uint256 nonce) public nonceOf;
 
   enum RecoverError {
     NoError,
@@ -33,7 +34,8 @@ contract ERC6538Registry is IERC6538Registry {
     bytes memory stealthMetaAddress
   ) external {
     // Check for nonce
-    bytes32 digest = keccak256(abi.encode(registrant, schemeId, stealthMetaAddress));
+    bytes32 digest =
+      keccak256(abi.encode(registrant, schemeId, stealthMetaAddress, nonceOf[registrant]++));
     require(isValidSignatureNow(registrant, digest, signature), "Invalid signature");
     stealthMetaAddressOf[registrant][schemeId] = stealthMetaAddress;
     emit StealthMetaAddressSet(registrant, schemeId, stealthMetaAddress);
