@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 /// @dev Interface for calling the `ERC5564Announcer` contract, which emits an `Announcement` event
