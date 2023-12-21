@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.23;
 
 import {IERC6538Registry} from "./interfaces/IERC6538Registry.sol";
 
@@ -11,14 +11,18 @@ contract ERC6538Registry is IERC6538Registry {
   /// @dev `schemeId` is an integer identifier for the stealth address scheme.
   mapping(address registrant => mapping(uint256 schemeId => bytes stealthMetaAddress)) public
     stealthMetaAddressOf;
+
+  /// @notice A nonce used to ensure a signature can only be used once.
+  /// @dev `user` is the registrant address.
+  /// @dev `nonce` will be incremented after each valid `registerKeysOnBehalf` call.
   mapping(address user => uint256 nonce) public nonceOf;
 
-  bytes32 private constant TYPE_HASH =
+  /// @notice A constant calculated as the keccak256 hash of the EIP712 Domain Separator.
+  bytes32 public constant TYPE_HASH =
     keccak256("EIP712Domain(string name,string version,uint256 chainId,address registryContract)");
 
   // Cache the domain separator as an immutable value, but also store the chain id that it
-  // corresponds to, in order to
-  // invalidate the cached domain separator if the chain id changes.
+  // corresponds to, in order to invalidate the cached domain separator if the chain id changes.
   bytes32 private immutable _cachedDomainSeparator;
   uint256 private immutable _cachedChainId;
   address private immutable _cachedThis;
@@ -39,8 +43,8 @@ contract ERC6538Registry is IERC6538Registry {
   constructor() {
     _name = "ERC6538Registry";
     _version = "1";
-    _hashedName = keccak256(bytes("ERC6538Registry"));
-    _hashedVersion = keccak256(bytes("1"));
+    _hashedName = keccak256(bytes(_name));
+    _hashedVersion = keccak256(bytes(_version));
     _cachedChainId = block.chainid;
     _cachedDomainSeparator = _buildDomainSeparator();
     _cachedThis = address(this);
@@ -70,9 +74,15 @@ contract ERC6538Registry is IERC6538Registry {
     emit StealthMetaAddressSet(registrant, schemeId, stealthMetaAddress);
   }
 
-  /**
-   * @dev Returns the domain separator for the current chain.
-   */
+  /// @notice Increments the nonce of the sender to invalidate existing signatures.
+  function incrementNonce() external {
+    nonceOf[msg.sender]++;
+  }
+
+  /// @notice Returns the domain separator for the current chain.
+  /// @dev The following code is from OpenZeppelin's `EIP712.sol` file.
+  /// @dev The method visibility was changed from internal to public. Original file permalink:
+  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/EIP712.sol
   function _domainSeparatorV4() public view returns (bytes32) {
     if (address(this) == _cachedThis && block.chainid == _cachedChainId) {
       return _cachedDomainSeparator;
@@ -81,41 +91,31 @@ contract ERC6538Registry is IERC6538Registry {
     }
   }
 
+  /// @notice Returns the hash of the EIP712 Domain Separator.
+  /// @dev The following code is from OpenZeppelin's `EIP712.sol` file. Permalink:
+  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/EIP712.sol
   function _buildDomainSeparator() private view returns (bytes32) {
     return
       keccak256(abi.encode(TYPE_HASH, _hashedName, _hashedVersion, block.chainid, address(this)));
   }
 
-  /**
-   * @dev Given an already https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct[hashed
-   * struct], this
-   * function returns the hash of the fully encoded EIP712 message for this domain.
-   *
-   * This hash can be used together with {ECDSA-recover} to obtain the signer of a message. For
-   * example:
-   *
-   * ```solidity
-   * bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
-   *     keccak256("Mail(address to,string contents)"),
-   *     mailTo,
-   *     keccak256(bytes(mailContents))
-   * )));
-   * address signer = ECDSA.recover(digest, signature);
-   * ```
-   */
+  /// @notice this function returns the hash of the fully encoded EIP712 message for this domain.
+  /// @dev The following code is from OpenZeppelin's `EIP712.sol` file. Permalink:
+  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/EIP712.sol
   function _hashTypedDataV4(bytes32 structHash) internal view virtual returns (bytes32) {
     return toTypedDataHash(_domainSeparatorV4(), structHash);
   }
 
-  /**
-   * @dev Returns the keccak256 digest of an EIP-712 typed data (ERC-191 version `0x01`).
-   *
-   * The digest is calculated from a `domainSeparator` and a `structHash`, by prefixing them with
-   * `\x19\x01` and hashing the result. It corresponds to the hash signed by the
-   * https://eips.ethereum.org/EIPS/eip-712[`eth_signTypedData`] JSON-RPC method as part of EIP-712.
-   *
-   * See {ECDSA-recover}.
-   */
+  /// @dev Returns the keccak256 digest of an EIP-712 typed data (ERC-191 version `0x01`).
+  ///
+  /// The digest is calculated from a `domainSeparator` and a `structHash`, by prefixing them with
+  /// `\x19\x01` and hashing the result. It corresponds to the hash signed by the
+  /// https://eips.ethereum.org/EIPS/eip-712[`eth_signTypedData`] JSON-RPC method as part of
+  /// EIP-712.
+  ///
+  /// See {ECDSA-recover}.
+  /// @dev The following code is from OpenZeppelin's `MessageHashUtils.sol` file. Permalink:
+  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/MessageHashUtils.sol
   function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash)
     internal
     pure
@@ -131,12 +131,11 @@ contract ERC6538Registry is IERC6538Registry {
     }
   }
 
-  /**
-   * @dev Checks if a signature is valid for a given signer and data hash. If the signer is a smart
-   * contract, the
-   * signature is validated against that smart contract using ERC1271, otherwise it's validated
-   * using `ECDSA.recover`.
-   */
+  /// @notice Checks if a signature is valid for a given signer and data hash. If the signer is a
+  /// smart contract, the signature is validated against that smart contract using ERC1271,
+  /// otherwise it's validated using `ECDSA.recover`.
+  /// @dev The following code is from OpenZeppelin's `SignatureChecker.sol` file. Permalink:
+  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/SignatureChecker.sol
   function isValidSignatureNow(address signer, bytes32 hash, bytes memory signature)
     internal
     view
@@ -147,11 +146,10 @@ contract ERC6538Registry is IERC6538Registry {
       || isValidERC1271SignatureNow(signer, hash, signature);
   }
 
-  /**
-   * @dev Checks if a signature is valid for a given signer and data hash. The signature is
-   * validated
-   * against the signer smart contract using ERC1271.
-   */
+  /// @notice Checks if a signature is valid for a given signer and data hash. The signature is
+  /// validated against the signer smart contract using ERC1271.
+  /// @dev The following code is from OpenZeppelin's `SignatureChecker.sol` file. Permalink:
+  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/SignatureChecker.sol
   function isValidERC1271SignatureNow(address signer, bytes32 hash, bytes memory signature)
     internal
     view
@@ -165,6 +163,8 @@ contract ERC6538Registry is IERC6538Registry {
     );
   }
 
+  /// @dev The following code is from OpenZeppelin's `ECDSA.sol` file. Permalink:
+  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/ECDSA.sol
   function tryRecover(bytes32 hash, bytes memory signature)
     internal
     pure
@@ -188,10 +188,10 @@ contract ERC6538Registry is IERC6538Registry {
     }
   }
 
-  /**
-   * @dev Overload of {ECDSA-tryRecover} that receives the `v`,
-   * `r` and `s` signature fields separately.
-   */
+  /// @notice Overload of {ECDSA-tryRecover} that receives the `v`, `r` and `s` signature fields
+  /// separately.
+  /// @dev The following code is from OpenZeppelin's `ECDSA.sol` file. Permalink:
+  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/ECDSA.sol
   function tryRecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s)
     internal
     pure
@@ -225,16 +225,12 @@ contract ERC6538Registry is IERC6538Registry {
   }
 }
 
-/**
- * @dev Interface of the ERC1271 standard signature validation method for
- * contracts as defined in https://eips.ethereum.org/EIPS/eip-1271[ERC-1271].
- */
+/// @notice Interface of the ERC1271 standard signature validation method for contracts as defined
+/// in https://eips.ethereum.org/EIPS/eip-1271[ERC-1271].
 interface IERC1271 {
-  /**
-   * @dev Should return whether the signature provided is valid for the provided data
-   * @param hash      Hash of the data to be signed
-   * @param signature Signature byte array associated with _data
-   */
+  /// @dev Should return whether the signature provided is valid for the provided data
+  /// @param hash      Hash of the data to be signed
+  /// @param signature Signature byte array associated with _data
   function isValidSignature(bytes32 hash, bytes memory signature)
     external
     view
