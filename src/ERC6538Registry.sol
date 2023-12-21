@@ -6,7 +6,7 @@ import {IERC6538Registry} from "./interfaces/IERC6538Registry.sol";
 /// @dev `ERC6538Registry` contract to map accounts to their stealth meta-address. See
 /// [ERC-6538](https://eips.ethereum.org/EIPS/eip-6538) to learn more.
 contract ERC6538Registry is IERC6538Registry {
-  /// @notice Maps a registrant's identifier to the scheme ID to the stealth meta-address.
+  /// @notice Next nonce expected from `user` to use when signing for `registerKeysOnBehalf`.
   /// @dev `registrant` may be a standard 160-bit address or any other identifier.
   /// @dev `schemeId` is an integer identifier for the stealth address scheme.
   mapping(address registrant => mapping(uint256 schemeId => bytes stealthMetaAddress)) public
@@ -17,7 +17,7 @@ contract ERC6538Registry is IERC6538Registry {
   /// @dev `nonce` will be incremented after each valid `registerKeysOnBehalf` call.
   mapping(address user => uint256 nonce) public nonceOf;
 
-  /// @notice A constant calculated as the keccak256 hash of the EIP712 Domain Separator.
+  /// @dev EIP-712 Type hash used in `registerKeysOnBehalf`
   bytes32 public constant TYPE_HASH =
     keccak256("EIP712Domain(string name,string version,uint256 chainId,address registryContract)");
 
