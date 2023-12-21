@@ -63,7 +63,6 @@ contract ERC6538Registry is IERC6538Registry {
     bytes memory signature,
     bytes memory stealthMetaAddress
   ) external {
-    // Check for nonce
     bytes32 digest = _hashTypedDataV4(
       keccak256(
         abi.encode(TYPE_HASH, registrant, schemeId, stealthMetaAddress, nonceOf[registrant]++)
