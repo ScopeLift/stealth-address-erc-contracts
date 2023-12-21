@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.23;
 
 /// @dev Interface for calling the `ERC5564Announcer` contract, which emits an `Announcement` event
 /// to broadcast information about a transaction involving a stealth address. See

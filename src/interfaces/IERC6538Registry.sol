@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.23;
 
 /// @dev Interface for calling the `ERC6538Registry` contract to map accounts to their stealth
 /// meta-address. See [ERC-6538](https://eips.ethereum.org/EIPS/eip-6538) to learn more.
