@@ -27,7 +27,7 @@ contract DeployTest is Test, Deploy {
     require(erc5564ComputedAddress.code.length == 0);
     require(erc6538ComputedAddress.code.length == 0);
 
-    /// Run deploy script
+    // Run deploy script
     Deploy.run();
 
     assertTrue(erc5564ComputedAddress.code.length > 0);
