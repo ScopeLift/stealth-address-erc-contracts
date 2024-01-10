@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-import {IERC6538Registry} from "./interfaces/IERC6538Registry.sol";
-
 /// @dev `ERC6538Registry` contract to map accounts to their stealth meta-address. See
 /// [ERC-6538](https://eips.ethereum.org/EIPS/eip-6538) to learn more.
-contract ERC6538Registry is IERC6538Registry {
+contract ERC6538Registry {
   /// @notice Next nonce expected from `user` to use when signing for `registerKeysOnBehalf`.
   /// @dev `registrant` may be a standard 160-bit address or any other identifier.
   /// @dev `schemeId` is an integer identifier for the stealth address scheme.
@@ -21,23 +19,8 @@ contract ERC6538Registry is IERC6538Registry {
   bytes32 public constant TYPE_HASH =
     keccak256("EIP712Domain(string name,string version,uint256 chainId,address registryContract)");
 
-  /// @dev Cache the domain separator as an immutable value.
-  bytes32 private immutable _cachedDomainSeparator;
-  /// @dev Store the chain id that `_cachedDomainSeparator` corresponds to, in order to invalidate
-  /// the cached domain separator if the chain id changes.
-  uint256 private immutable _cachedChainId;
-  /// @dev Cache the address of this contract as an immutable value.
-  address private immutable _cachedThis;
-
-  /// @dev Cache the hash of the name as an immutable value.
-  bytes32 private immutable _hashedName;
-  /// @dev Cache the hash of the version as immutable value.
-  bytes32 private immutable _hashedVersion;
-
-  /// @dev Name of the registry.
-  string private _name;
-  /// @dev Version of the registry.
-  string private _version;
+  /// @dev The domain separator used in this contract.
+  bytes32 public immutable domainSeparator;
 
   enum RecoverError {
     NoError,
@@ -46,23 +29,43 @@ contract ERC6538Registry is IERC6538Registry {
     InvalidSignatureS
   }
 
+  /// @dev Emitted when a registrant updates their stealth meta-address.
+  /// @param registrant The account that registered the stealth meta-address.
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// secp256k1, as specified in ERC-5564.
+  /// @param stealthMetaAddress The stealth meta-address.
+  /// [ERC-5564](https://eips.ethereum.org/EIPS/eip-5564) bases the format for stealth
+  /// meta-addresses on [ERC-3770](https://eips.ethereum.org/EIPS/eip-3770) and specifies them as:
+  ///   st:<shortName>:0x<spendingPubKey>:<viewingPubKey>
+  /// The chain (`shortName`) is implicit based on the chain the `ERC6538Registry` is deployed on,
+  /// therefore this `stealthMetaAddress` is just the `spendingPubKey` and `viewingPubKey`
+  /// concatenated.
+  event StealthMetaAddressSet(
+    address indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
+  );
+
   constructor() {
-    _name = "ERC6538Registry";
-    _version = "1";
-    _hashedName = keccak256(bytes(_name));
-    _hashedVersion = keccak256(bytes(_version));
-    _cachedChainId = block.chainid;
-    _cachedDomainSeparator = _buildDomainSeparator();
-    _cachedThis = address(this);
+    domainSeparator =
+      keccak256(abi.encode(TYPE_HASH, "ERC6538Registry", "1.0", block.chainid, address(this)));
   }
 
-  /// @inheritdoc IERC6538Registry
+  /// @notice Sets the caller's stealth meta-address for the given scheme ID.
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// secp256k1, as specified in ERC-5564.
+  /// @param stealthMetaAddress The stealth meta-address to register.
   function registerKeys(uint256 schemeId, bytes memory stealthMetaAddress) external {
     stealthMetaAddressOf[msg.sender][schemeId] = stealthMetaAddress;
     emit StealthMetaAddressSet(msg.sender, schemeId, stealthMetaAddress);
   }
 
-  /// @inheritdoc IERC6538Registry
+  /// @notice Sets the `registrant`'s stealth meta-address for the given scheme ID.
+  /// @param registrant Address of the registrant.
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// secp256k1, as specified in ERC-5564.
+  /// @param signature A signature from the `registrant` authorizing the registration.
+  /// @param stealthMetaAddress The stealth meta-address to register.
+  /// @dev Supports both EOA signatures and EIP-1271 signatures.
+  /// @dev Reverts if the signature is invalid.
   function registerKeysOnBehalf(
     address registrant,
     uint256 schemeId,
@@ -84,33 +87,13 @@ contract ERC6538Registry is IERC6538Registry {
     nonceOf[msg.sender]++;
   }
 
-  /// @notice Returns the domain separator for the current chain.
-  /// @dev The following code is from OpenZeppelin's `EIP712.sol` file.
-  /// @dev The method visibility was changed from internal to public. Original file permalink:
-  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/EIP712.sol
-  function _domainSeparatorV4() public view returns (bytes32) {
-    if (address(this) == _cachedThis && block.chainid == _cachedChainId) {
-      return _cachedDomainSeparator;
-    } else {
-      return _buildDomainSeparator();
-    }
-  }
-
-  /// @notice Returns the hash of the EIP712 Domain Separator.
-  /// @dev The following code is from OpenZeppelin's `EIP712.sol` file. Permalink:
-  /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/EIP712.sol
-  function _buildDomainSeparator() private view returns (bytes32) {
-    return
-      keccak256(abi.encode(TYPE_HASH, _hashedName, _hashedVersion, block.chainid, address(this)));
-  }
-
   /// @notice Returns the hash of the fully encoded EIP712 message for this domain.
-  /// @dev The following code is from OpenZeppelin's `EIP712.sol` file. Permalink:
+  /// @dev The following code is modified from OpenZeppelin's `EIP712.sol` file. Permalink:
   /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/EIP712.sol
   /// @param structHash The hash of the struct containing the message data, as defined in
   /// https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct
   function _hashTypedDataV4(bytes32 structHash) internal view virtual returns (bytes32) {
-    return toTypedDataHash(_domainSeparatorV4(), structHash);
+    return toTypedDataHash(domainSeparator, structHash);
   }
 
   /// @dev Returns the keccak256 digest of an EIP-712 typed data (ERC-191 version `0x01`).
@@ -120,10 +103,10 @@ contract ERC6538Registry is IERC6538Registry {
   /// EIP-712.
   /// @dev The following code is from OpenZeppelin's `MessageHashUtils.sol` file. Permalink:
   /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/MessageHashUtils.sol
-  /// @param domainSeparator The domain separator returned by `_domainSeparatorV4`.
+  /// @param contractDomainSeparator The domain separator.
   /// @param structHash The hash of the struct containing the message data, as defined in
   /// https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct
-  function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash)
+  function toTypedDataHash(bytes32 contractDomainSeparator, bytes32 structHash)
     internal
     pure
     returns (bytes32 digest)
@@ -132,7 +115,7 @@ contract ERC6538Registry is IERC6538Registry {
     assembly {
       let ptr := mload(0x40)
       mstore(ptr, hex"1901")
-      mstore(add(ptr, 0x02), domainSeparator)
+      mstore(add(ptr, 0x02), contractDomainSeparator)
       mstore(add(ptr, 0x22), structHash)
       digest := keccak256(ptr, 0x42)
     }
@@ -158,7 +141,7 @@ contract ERC6538Registry is IERC6538Registry {
 
   /// @notice Checks if a signature is valid for a given signer and data hash. The signature is
   /// validated against the signer smart contract using ERC1271.
-  /// @dev The following code is from OpenZeppelin's `SignatureChecker.sol` file. Permalink:
+  /// @dev The following code is modified from OpenZeppelin's `SignatureChecker.sol` file. Permalink:
   /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/e70a0118ef10773457f670671baefad2c5ea610d/contracts/utils/cryptography/SignatureChecker.sol
   /// @param signer The address that should have signed the message data.
   /// @param hash The digest of message data.
@@ -168,11 +151,13 @@ contract ERC6538Registry is IERC6538Registry {
     view
     returns (bool)
   {
-    (bool success, bytes memory result) =
-      signer.staticcall(abi.encodeCall(IERC1271.isValidSignature, (hash, signature)));
+    (bool success, bytes memory result) = signer.staticcall(
+      abi.encodeWithSelector(bytes4(keccak256("isValidSignature(bytes32,bytes)")), hash, signature)
+    );
     return (
       success && result.length >= 32
-        && abi.decode(result, (bytes32)) == bytes32(IERC1271.isValidSignature.selector)
+        && abi.decode(result, (bytes32))
+          == bytes32(bytes4(keccak256("isValidSignature(bytes32,bytes)")))
     );
   }
 
@@ -231,16 +216,4 @@ contract ERC6538Registry is IERC6538Registry {
 
     return (signer, RecoverError.NoError, bytes32(0));
   }
-}
-
-/// @notice Interface of the ERC1271 standard signature validation method for contracts as defined
-/// in https://eips.ethereum.org/EIPS/eip-1271[ERC-1271].
-interface IERC1271 {
-  /// @dev Should return whether the signature provided is valid for the provided data
-  /// @param hash      Hash of the data to be signed
-  /// @param signature Signature byte array associated with _data
-  function isValidSignature(bytes32 hash, bytes memory signature)
-    external
-    view
-    returns (bytes4 magicValue);
 }
