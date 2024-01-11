@@ -69,7 +69,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
 
     vm.expectEmit(true, true, true, true);
     emit StealthMetaAddressSet(alice, schemeId, stealthMetaAddress);
-    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
+    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress, v, r, s);
   }
 
   function testFuzz_ERC1271SignatureIsValid(
@@ -91,7 +91,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
 
     vm.expectEmit(true, true, true, true);
     emit StealthMetaAddressSet(registrant, schemeId, stealthMetaAddress);
-    registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress);
+    registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress, v, r, s);
   }
 
   function testFuzz_UpdateStealthMetaAddress(
@@ -112,7 +112,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
 
       vm.expectEmit(true, true, true, true);
       emit StealthMetaAddressSet(alice, schemeId, stealthMetaAddress);
-      registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
+      registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress, v, r, s);
     }
   }
 
@@ -123,12 +123,14 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     bytes memory stealthMetaAddress
   ) external {
     (address alice, uint256 alicePk) = makeAddrAndKey(name);
-    bytes32 hash = keccak256(abi.encode(alice, schemeId, stealthMetaAddress, 0));
+    SigUtils.RegistrantInfo memory registrantInfo =
+      SigUtils.RegistrantInfo(alice, schemeId, stealthMetaAddress, 0 /* nonce */ );
+    bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
 
-    vm.expectRevert("Invalid signature");
-    registry.registerKeysOnBehalf(bob, schemeId, signature, stealthMetaAddress);
+    vm.expectRevert();
+    registry.registerKeysOnBehalf(bob, schemeId, signature, stealthMetaAddress, v, r, s);
   }
 
   function testFuzz_RevertIf_WrongNonce(
@@ -139,17 +141,18 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
   ) external {
     vm.assume(nonce != 0);
     (address alice, uint256 alicePk) = makeAddrAndKey(name);
-    bytes32 hash = keccak256(abi.encode(alice, schemeId, stealthMetaAddress, nonce));
+    SigUtils.RegistrantInfo memory registrantInfo =
+      SigUtils.RegistrantInfo(alice, schemeId, stealthMetaAddress, nonce);
+    bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
-
-    vm.expectRevert("Invalid signature");
-    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
+    vm.expectRevert();
+    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress, v, r, s);
   }
 
   function test_RevertIf_NoSignatureIsProvided() external {
-    vm.expectRevert("Invalid signature");
-    registry.registerKeysOnBehalf(address(0), 0, "", "");
+    vm.expectRevert();
+    registry.registerKeysOnBehalf(address(0), 0, "", "", 0, 0, 0);
   }
 }
 
@@ -265,4 +268,16 @@ contract SigUtils {
   function getTypedDataHash(RegistrantInfo memory _info) public view returns (bytes32) {
     return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getStructHash(_info)));
   }
+}
+/// @notice Interface of the ERC1271 standard signature validation method for contracts as defined
+/// in https://eips.ethereum.org/EIPS/eip-1271[ERC-1271].
+
+interface IERC1271 {
+  /// @dev Should return whether the signature provided is valid for the provided data
+  /// @param hash      Hash of the data to be signed
+  /// @param signature Signature byte array associated with _data
+  function isValidSignature(bytes32 hash, bytes memory signature)
+    external
+    view
+    returns (bytes4 magicValue);
 }
