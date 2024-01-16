@@ -31,15 +31,15 @@ contract ERC6538Registry {
 
   /// @dev Emitted when a registrant updates their stealth meta-address.
   /// @param registrant The account that registered the stealth meta-address.
-  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
   /// secp256k1, as specified in ERC-5564.
   /// @param stealthMetaAddress The stealth meta-address.
   /// [ERC-5564](https://eips.ethereum.org/EIPS/eip-5564) bases the format for stealth
   /// meta-addresses on [ERC-3770](https://eips.ethereum.org/EIPS/eip-3770) and specifies them as:
   ///   st:<shortName>:0x<spendingPubKey>:<viewingPubKey>
   /// The chain (`shortName`) is implicit based on the chain the `ERC6538Registry` is deployed on,
-  /// therefore this `stealthMetaAddress` is just the `spendingPubKey` and `viewingPubKey`
-  /// concatenated.
+  /// therefore this `stealthMetaAddress` is just the compressed `spendingPubKey` and
+  /// `viewingPubKey` concatenated.
   event StealthMetaAddressSet(
     address indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
   );
@@ -50,7 +50,7 @@ contract ERC6538Registry {
   }
 
   /// @notice Sets the caller's stealth meta-address for the given scheme ID.
-  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
   /// secp256k1, as specified in ERC-5564.
   /// @param stealthMetaAddress The stealth meta-address to register.
   function registerKeys(uint256 schemeId, bytes memory stealthMetaAddress) external {
@@ -60,7 +60,7 @@ contract ERC6538Registry {
 
   /// @notice Sets the `registrant`'s stealth meta-address for the given scheme ID.
   /// @param registrant Address of the registrant.
-  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
   /// secp256k1, as specified in ERC-5564.
   /// @param signature A signature from the `registrant` authorizing the registration.
   /// @param stealthMetaAddress The stealth meta-address to register.
@@ -105,18 +105,13 @@ contract ERC6538Registry {
     stealthMetaAddressOf[registrant][schemeId] = stealthMetaAddress;
     emit StealthMetaAddressSet(registrant, schemeId, stealthMetaAddress);
   }
-
-  /// @notice Increments the nonce of the sender to invalidate existing signatures.
-  function incrementNonce() external {
-    nonceOf[msg.sender]++;
-  }
 }
 
 /// @notice Interface of the ERC1271 standard signature validation method for contracts as defined
 /// in https://eips.ethereum.org/EIPS/eip-1271[ERC-1271].
 interface IERC1271 {
   /// @dev Should return whether the signature provided is valid for the provided data
-  /// @param hash      Hash of the data to be signed
+  /// @param hash Hash of the data to be signed
   /// @param signature Signature byte array associated with _data
   function isValidSignature(bytes32 hash, bytes memory signature)
     external
