@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 // slither-disable-start reentrancy-benign
 
 pragma solidity 0.8.23;

@@ -13,7 +13,7 @@ contract ERC6538RegistryTest is Test, Deploy {
 
   function setUp() public {
     Deploy.run();
-    sigUtils = new SigUtils(registry.domainSeparator());
+    sigUtils = new SigUtils(registry.DOMAIN_SEPARATOR());
   }
 }
 

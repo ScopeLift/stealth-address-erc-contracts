@@ -19,15 +19,11 @@ contract ERC6538Registry {
   bytes32 public constant TYPE_HASH =
     keccak256("EIP712Domain(string name,string version,uint256 chainId,address registryContract)");
 
-  /// @dev The domain separator used in this contract.
-  bytes32 public immutable domainSeparator;
+  /// @dev The chain ID where this contract is initially deployed.
+  uint256 internal immutable INITIAL_CHAIN_ID;
 
-  enum RecoverError {
-    NoError,
-    InvalidSignature,
-    InvalidSignatureLength,
-    InvalidSignatureS
-  }
+  /// @dev The domain separator used in this contract.
+  bytes32 internal immutable INITIAL_DOMAIN_SEPARATOR;
 
   /// @dev Emitted when a registrant updates their stealth meta-address.
   /// @param registrant The account that registered the stealth meta-address.
@@ -45,8 +41,8 @@ contract ERC6538Registry {
   );
 
   constructor() {
-    domainSeparator =
-      keccak256(abi.encode(TYPE_HASH, "ERC6538Registry", "1.0", block.chainid, address(this)));
+    INITIAL_CHAIN_ID = block.chainid;
+    INITIAL_DOMAIN_SEPARATOR = _computeDomainSeparator();
   }
 
   /// @notice Sets the caller's stealth meta-address for the given scheme ID.
@@ -76,20 +72,18 @@ contract ERC6538Registry {
     bytes32 s
   ) external {
     bytes32 dataHash;
-    address recoveredAddress;
-
     unchecked {
       dataHash = keccak256(
         abi.encodePacked(
           "\x19\x01",
-          domainSeparator,
+          DOMAIN_SEPARATOR(),
           keccak256(
             abi.encode(TYPE_HASH, registrant, schemeId, stealthMetaAddress, nonceOf[registrant]++)
           )
         )
       );
-      recoveredAddress = ecrecover(dataHash, v, r, s);
     }
+    address recoveredAddress = ecrecover(dataHash, v, r, s);
 
     require(
       (
@@ -104,6 +98,26 @@ contract ERC6538Registry {
 
     stealthMetaAddressOf[registrant][schemeId] = stealthMetaAddress;
     emit StealthMetaAddressSet(registrant, schemeId, stealthMetaAddress);
+  }
+
+  /// @notice Increments the nonce of the sender to invalidate existing signatures.
+  function incrementNonce() external {
+    nonceOf[msg.sender]++;
+  }
+
+  /// @dev Returns the domain separator used in this contract.
+  /// @dev The domain separator is re-computed if there's a chain fork.
+  function DOMAIN_SEPARATOR() public view returns (bytes32) {
+    return block.chainid == INITIAL_CHAIN_ID ? INITIAL_DOMAIN_SEPARATOR : _computeDomainSeparator();
+  }
+
+  /// @dev Computes the domain separator for this contract.
+  function _computeDomainSeparator() internal view returns (bytes32) {
+    return keccak256(
+      abi.encode(
+        TYPE_HASH, keccak256("ERC6538Registry"), keccak256("1.0"), block.chainid, address(this)
+      )
+    );
   }
 }
 
