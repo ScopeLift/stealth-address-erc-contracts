@@ -57,7 +57,7 @@ contract RegisterKeys is ERC6538RegistryTest {
 }
 
 contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
-  function testFuzz_SignatureIsValid(
+  function testFuzz_ERC712SignatureIsValid(
     string memory name,
     uint256 schemeId,
     bytes memory stealthMetaAddress
@@ -118,7 +118,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     }
   }
 
-  function testFuzz_RevertIf_SignatureIsNotValid(
+  function testFuzz_RevertIf_ERC712SignatureIsNotValid(
     string memory name,
     address bob,
     uint256 schemeId,
@@ -133,6 +133,28 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
 
     vm.expectRevert();
     registry.registerKeysOnBehalf(bob, schemeId, signature, stealthMetaAddress, v, r, s);
+  }
+
+  function testFuzz_RevertIf_ERC1271SignatureIsNotValid(
+    string memory name,
+    address bob,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress
+  ) external {
+    ( /* address alice */ , uint256 alicePk) = makeAddrAndKey(name);
+
+    vm.prank(bob);
+    ERC1271MockContract erc1271MockContract = new ERC1271MockContract();
+    address registrant = address(erc1271MockContract);
+
+    SigUtils.RegistrantInfo memory registrantInfo =
+      SigUtils.RegistrantInfo(registrant, schemeId, stealthMetaAddress, 0 /* nonce */ );
+    bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    vm.expectRevert("Invalid signature");
+    registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress, v, r, s);
   }
 
   function testFuzz_RevertIf_WrongNonce(
@@ -155,6 +177,35 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
   function test_RevertIf_NoSignatureIsProvided() external {
     vm.expectRevert();
     registry.registerKeysOnBehalf(address(0), 0, "", "", 0, 0, 0);
+  }
+
+  function testFuzz_IncrementNonceCorrectly(address registrant) external {
+    uint256 nonce = registry.nonceOf(address(registrant));
+    vm.startPrank(registrant);
+    registry.incrementNonce();
+    assertEq(registry.nonceOf(registrant), nonce + 1);
+    registry.incrementNonce();
+    assertEq(registry.nonceOf(registrant), nonce + 2);
+    vm.stopPrank();
+  }
+
+  function testFuzz_UpdateDomainSeparatorAfterChainSplit(uint256 chainId) external {
+    chainId = bound(chainId, 1, 1_000_000);
+    vm.chainId(chainId);
+    assertEq(
+      registry.DOMAIN_SEPARATOR(),
+      keccak256(
+        abi.encode(
+          keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address registryContract)"
+          ),
+          keccak256("ERC6538Registry"),
+          keccak256("1.0"),
+          chainId,
+          address(registry)
+        )
+      )
+    );
   }
 }
 
