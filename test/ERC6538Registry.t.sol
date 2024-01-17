@@ -46,9 +46,11 @@ contract RegisterKeys is ERC6538RegistryTest {
   /// forge-config: default.fuzz.runs = 1
   /// forge-config: ci.fuzz.runs = 1
   /// forge-config: lite.fuzz.runs = 1
-  function testFuzz_NeverReverts(address caller, uint256 schemeId, bytes memory stealthMetaAddress)
-    external
-  {
+  function testFuzz_AlwaysSucceeds(
+    address caller,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress
+  ) external {
     vm.prank(caller);
     registry.registerKeys(schemeId, stealthMetaAddress);
   }

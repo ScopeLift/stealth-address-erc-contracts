@@ -38,7 +38,7 @@ contract Announce is ERC5564AnnouncerTest {
   /// forge-config: default.fuzz.runs = 1
   /// forge-config: ci.fuzz.runs = 1
   /// forge-config: lite.fuzz.runs = 1
-  function testFuzz_NeverReverts(
+  function testFuzz_AlwaysSucceeds(
     uint256 schemeId,
     address stealthAddress,
     address caller,
