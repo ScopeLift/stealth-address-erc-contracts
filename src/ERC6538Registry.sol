@@ -7,13 +7,12 @@ contract ERC6538Registry {
   /// @notice Next nonce expected from `user` to use when signing for `registerKeysOnBehalf`.
   /// @dev `registrant` may be a standard 160-bit address or any other identifier.
   /// @dev `schemeId` is an integer identifier for the stealth address scheme.
-  mapping(address registrant => mapping(uint256 schemeId => bytes stealthMetaAddress)) public
-    stealthMetaAddressOf;
+  mapping(address registrant => mapping(uint256 schemeId => bytes)) public stealthMetaAddressOf;
 
   /// @notice A nonce used to ensure a signature can only be used once.
   /// @dev `user` is the registrant address.
   /// @dev `nonce` will be incremented after each valid `registerKeysOnBehalf` call.
-  mapping(address user => uint256 nonce) public nonceOf;
+  mapping(address user => uint256) public nonceOf;
 
   /// @dev EIP-712 Type hash used in `registerKeysOnBehalf`.
   bytes32 public constant TYPE_HASH =
@@ -49,7 +48,7 @@ contract ERC6538Registry {
   /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
   /// secp256k1, as specified in ERC-5564.
   /// @param stealthMetaAddress The stealth meta-address to register.
-  function registerKeys(uint256 schemeId, bytes memory stealthMetaAddress) external {
+  function registerKeys(uint256 schemeId, bytes calldata stealthMetaAddress) external {
     stealthMetaAddressOf[msg.sender][schemeId] = stealthMetaAddress;
     emit StealthMetaAddressSet(msg.sender, schemeId, stealthMetaAddress);
   }
@@ -66,12 +65,11 @@ contract ERC6538Registry {
     address registrant,
     uint256 schemeId,
     bytes memory signature,
-    bytes memory stealthMetaAddress,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
+    bytes calldata stealthMetaAddress
   ) external {
     bytes32 dataHash;
+    address recoveredAddress;
+
     unchecked {
       dataHash = keccak256(
         abi.encodePacked(
@@ -83,7 +81,18 @@ contract ERC6538Registry {
         )
       );
     }
-    address recoveredAddress = ecrecover(dataHash, v, r, s);
+
+    if (signature.length == 65) {
+      bytes32 r;
+      bytes32 s;
+      uint8 v;
+      assembly ("memory-safe") {
+        r := mload(add(signature, 0x20))
+        s := mload(add(signature, 0x40))
+        v := byte(0, mload(add(signature, 0x60)))
+      }
+      recoveredAddress = ecrecover(dataHash, v, r, s);
+    }
 
     require(
       (
@@ -102,7 +111,9 @@ contract ERC6538Registry {
 
   /// @notice Increments the nonce of the sender to invalidate existing signatures.
   function incrementNonce() external {
-    nonceOf[msg.sender]++;
+    unchecked {
+      nonceOf[msg.sender]++;
+    }
   }
 
   /// @dev Returns the domain separator used in this contract.

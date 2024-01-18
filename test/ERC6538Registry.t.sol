@@ -71,7 +71,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
 
     vm.expectEmit(true, true, true, true);
     emit StealthMetaAddressSet(alice, schemeId, stealthMetaAddress);
-    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress, v, r, s);
+    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
   }
 
   function testFuzz_ERC1271SignatureIsValid(
@@ -93,7 +93,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
 
     vm.expectEmit(true, true, true, true);
     emit StealthMetaAddressSet(registrant, schemeId, stealthMetaAddress);
-    registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress, v, r, s);
+    registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress);
   }
 
   function testFuzz_UpdateStealthMetaAddress(
@@ -114,7 +114,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
 
       vm.expectEmit(true, true, true, true);
       emit StealthMetaAddressSet(alice, schemeId, stealthMetaAddress);
-      registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress, v, r, s);
+      registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
     }
   }
 
@@ -132,7 +132,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     bytes memory signature = abi.encodePacked(r, s, v);
 
     vm.expectRevert();
-    registry.registerKeysOnBehalf(bob, schemeId, signature, stealthMetaAddress, v, r, s);
+    registry.registerKeysOnBehalf(bob, schemeId, signature, stealthMetaAddress);
   }
 
   function testFuzz_RevertIf_ERC1271SignatureIsNotValid(
@@ -154,7 +154,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     bytes memory signature = abi.encodePacked(r, s, v);
 
     vm.expectRevert("Invalid signature");
-    registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress, v, r, s);
+    registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress);
   }
 
   function testFuzz_RevertIf_WrongNonce(
@@ -171,12 +171,12 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
     vm.expectRevert();
-    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress, v, r, s);
+    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
   }
 
   function test_RevertIf_NoSignatureIsProvided() external {
     vm.expectRevert();
-    registry.registerKeysOnBehalf(address(0), 0, "", "", 0, 0, 0);
+    registry.registerKeysOnBehalf(address(0), 0, "", "");
   }
 
   function testFuzz_IncrementNonceCorrectly(address registrant) external {
