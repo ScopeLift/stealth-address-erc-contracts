@@ -14,10 +14,6 @@ contract ERC6538Registry {
   /// @dev `nonce` will be incremented after each valid `registerKeysOnBehalf` call.
   mapping(address user => uint256) public nonceOf;
 
-  /// @dev EIP-712 Type hash used in `registerKeysOnBehalf`.
-  bytes32 public constant TYPE_HASH =
-    keccak256("EIP712Domain(string name,string version,uint256 chainId,address registryContract)");
-
   /// @dev The chain ID where this contract is initially deployed.
   uint256 internal immutable INITIAL_CHAIN_ID;
 
@@ -76,7 +72,15 @@ contract ERC6538Registry {
           "\x19\x01",
           DOMAIN_SEPARATOR(),
           keccak256(
-            abi.encode(TYPE_HASH, registrant, schemeId, stealthMetaAddress, nonceOf[registrant]++)
+            abi.encode(
+              keccak256(
+                "RegisterKeysOnBehalf(address registrant,uint256 schemeId,bytes stealthMetaAddress,uint256 nonce)"
+              ),
+              registrant,
+              schemeId,
+              stealthMetaAddress,
+              nonceOf[registrant]++
+            )
           )
         )
       );
@@ -126,7 +130,13 @@ contract ERC6538Registry {
   function _computeDomainSeparator() internal view returns (bytes32) {
     return keccak256(
       abi.encode(
-        TYPE_HASH, keccak256("ERC6538Registry"), keccak256("1.0"), block.chainid, address(this)
+        keccak256(
+          "EIP712Domain(string name,string version,uint256 chainId,address registryContract)"
+        ),
+        keccak256("ERC6538Registry"),
+        keccak256("1.0"),
+        block.chainid,
+        address(this)
       )
     );
   }

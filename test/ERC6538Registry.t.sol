@@ -299,9 +299,6 @@ contract SigUtils {
     DOMAIN_SEPARATOR = _DOMAIN_SEPARATOR;
   }
 
-  bytes32 public constant TYPEHASH =
-    keccak256("EIP712Domain(string name,string version,uint256 chainId,address registryContract)");
-
   struct RegistrantInfo {
     address registrant;
     uint256 schemeId;
@@ -312,7 +309,15 @@ contract SigUtils {
   // computes the hash
   function getStructHash(RegistrantInfo memory _info) internal pure returns (bytes32) {
     return keccak256(
-      abi.encode(TYPEHASH, _info.registrant, _info.schemeId, _info.stealthMetaAddress, _info.nonce)
+      abi.encode(
+        keccak256(
+          "RegisterKeysOnBehalf(address registrant,uint256 schemeId,bytes stealthMetaAddress,uint256 nonce)"
+        ),
+        _info.registrant,
+        _info.schemeId,
+        _info.stealthMetaAddress,
+        _info.nonce
+      )
     );
   }
 
