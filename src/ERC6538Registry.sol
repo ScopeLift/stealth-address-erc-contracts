@@ -4,6 +4,9 @@ pragma solidity 0.8.23;
 /// @dev `ERC6538Registry` contract to map accounts to their stealth meta-address. See
 /// [ERC-6538](https://eips.ethereum.org/EIPS/eip-6538) to learn more.
 contract ERC6538Registry {
+  /// @notice Emitted when an invalid signature is provided to `registerKeysOnBehalf`.
+  error ERC6538Registry__InvalidSignature();
+
   /// @notice Next nonce expected from `user` to use when signing for `registerKeysOnBehalf`.
   /// @dev `registrant` may be a standard 160-bit address or any other identifier.
   /// @dev `schemeId` is an integer identifier for the stealth address scheme.
@@ -98,16 +101,15 @@ contract ERC6538Registry {
       recoveredAddress = ecrecover(dataHash, v, r, s);
     }
 
-    require(
+    if (
       (
-        (recoveredAddress != address(0) && recoveredAddress == registrant)
-          || (
+        (recoveredAddress == address(0) || recoveredAddress != registrant)
+          && (
             IERC1271(registrant).isValidSignature(dataHash, signature)
-              == IERC1271.isValidSignature.selector
+              != IERC1271.isValidSignature.selector
           )
-      ),
-      "Invalid signature"
-    );
+      )
+    ) revert ERC6538Registry__InvalidSignature();
 
     stealthMetaAddressOf[registrant][schemeId] = stealthMetaAddress;
     emit StealthMetaAddressSet(registrant, schemeId, stealthMetaAddress);

@@ -7,6 +7,8 @@ import {Deploy} from "script/Deploy.s.sol";
 contract ERC6538RegistryTest is Test, Deploy {
   SigUtils internal sigUtils;
 
+  error ERC6538Registry__InvalidSignature();
+
   event StealthMetaAddressSet(
     address indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
   );
@@ -153,7 +155,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
 
-    vm.expectRevert("Invalid signature");
+    vm.expectRevert(ERC6538Registry__InvalidSignature.selector);
     registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress);
   }
 
