@@ -35,6 +35,19 @@ jobs:
       - name: Run tests
         run: forge test
 
+      - name: Install `jd` CLI
+        run: go install github.com/josephburnett/jd@latest
+
+      - name: Ensure correctness of the `IERC5564Announcer` interface
+        run: |
+          diff=$(jd -set out/ERC5564Announcer.sol/ERC5564Announcer.json out/IERC5564Announcer.sol/IERC5564Announcer.json)
+          if [[ -n $diff ]]; then exit 1; fi
+
+      - name: Ensure correctness of the `IERC6538Registry` interface
+        run: |
+          diff=$(jd -set out/ERC6538Registry.sol/ERC6538Registry.json out/IERC6538Registry.sol/IERC6538Registry.json)
+          if [[ -n $diff ]]; then exit 1; fi
+
   coverage:
     runs-on: ubuntu-latest
     steps:
