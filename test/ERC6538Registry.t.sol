@@ -19,6 +19,25 @@ contract ERC6538RegistryTest is Test, Deploy {
   }
 }
 
+contract Constructor is ERC6538RegistryTest {
+  function test_DomainSeparatorIsInitializedCorrectly() external {
+    assertEq(
+      registry.DOMAIN_SEPARATOR(),
+      keccak256(
+        abi.encode(
+          keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address registryContract)"
+          ),
+          keccak256("ERC6538Registry"),
+          keccak256("1.0"),
+          block.chainid,
+          address(registry)
+        )
+      )
+    );
+  }
+}
+
 contract RegisterKeys is ERC6538RegistryTest {
   function testFuzz_EmitsStealthMetaAddressSetEvent(
     address caller,
@@ -58,8 +77,8 @@ contract RegisterKeys is ERC6538RegistryTest {
   }
 }
 
-contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
-  function testFuzz_ERC712SignatureIsValid(
+contract RegisterKeysOnBehalf is ERC6538RegistryTest {
+  function testFuzz_Erc712SignatureIsValid(
     string memory name,
     uint256 schemeId,
     bytes memory stealthMetaAddress
@@ -76,7 +95,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
   }
 
-  function testFuzz_ERC1271SignatureIsValid(
+  function testFuzz_Erc1271SignatureIsValid(
     string memory name,
     uint256 schemeId,
     bytes memory stealthMetaAddress
@@ -120,7 +139,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     }
   }
 
-  function testFuzz_RevertIf_ERC712SignatureIsNotValid(
+  function testFuzz_RevertIf_Erc712SignatureIsNotValid(
     string memory name,
     address bob,
     uint256 schemeId,
@@ -137,7 +156,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     registry.registerKeysOnBehalf(bob, schemeId, signature, stealthMetaAddress);
   }
 
-  function testFuzz_RevertIf_ERC1271SignatureIsNotValid(
+  function testFuzz_RevertIf_Erc1271SignatureIsNotValid(
     string memory name,
     address bob,
     uint256 schemeId,
@@ -180,8 +199,10 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     vm.expectRevert();
     registry.registerKeysOnBehalf(address(0), 0, "", "");
   }
+}
 
-  function testFuzz_IncrementNonceCorrectly(address registrant) external {
+contract IncrementNonce is ERC6538RegistryTest {
+  function testFuzz_IncrementCallerNonceCorrectly(address registrant) external {
     uint256 nonce = registry.nonceOf(address(registrant));
     vm.startPrank(registrant);
     registry.incrementNonce();
@@ -190,7 +211,9 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     assertEq(registry.nonceOf(registrant), nonce + 2);
     vm.stopPrank();
   }
+}
 
+contract Domain_Separator is ERC6538RegistryTest {
   function testFuzz_UpdateDomainSeparatorAfterChainSplit(uint256 chainId) external {
     chainId = bound(chainId, 1, 1_000_000);
     vm.chainId(chainId);
