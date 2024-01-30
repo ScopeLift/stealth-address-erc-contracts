@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-/// @dev `ERC6538Registry` contract to map accounts to their stealth meta-address. See
+/// @notice `ERC6538Registry` contract to map accounts to their stealth meta-address. See
 /// [ERC-6538](https://eips.ethereum.org/EIPS/eip-6538) to learn more.
 contract ERC6538Registry {
   /// @notice Emitted when an invalid signature is provided to `registerKeysOnBehalf`.
@@ -21,13 +21,13 @@ contract ERC6538Registry {
   bytes32 public constant ERC6538REGISTRY_ENTRY_TYPE_HASH =
     keccak256("Erc6538RegistryEntry(uint256 schemeId,bytes stealthMetaAddress,uint256 nonce)");
 
-  /// @dev The chain ID where this contract is initially deployed.
+  /// @notice The chain ID where this contract is initially deployed.
   uint256 internal immutable INITIAL_CHAIN_ID;
 
-  /// @dev The domain separator used in this contract.
+  /// @notice The domain separator used in this contract.
   bytes32 internal immutable INITIAL_DOMAIN_SEPARATOR;
 
-  /// @dev Emitted when a registrant updates their stealth meta-address.
+  /// @notice Emitted when a registrant updates their stealth meta-address.
   /// @param registrant The account that registered the stealth meta-address.
   /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
   /// secp256k1, as specified in ERC-5564.
@@ -120,13 +120,13 @@ contract ERC6538Registry {
     }
   }
 
-  /// @dev Returns the domain separator used in this contract.
+  /// @notice Returns the domain separator used in this contract.
   /// @dev The domain separator is re-computed if there's a chain fork.
   function DOMAIN_SEPARATOR() public view returns (bytes32) {
     return block.chainid == INITIAL_CHAIN_ID ? INITIAL_DOMAIN_SEPARATOR : _computeDomainSeparator();
   }
 
-  /// @dev Computes the domain separator for this contract.
+  /// @notice Computes the domain separator for this contract.
   function _computeDomainSeparator() internal view returns (bytes32) {
     return keccak256(
       abi.encode(
@@ -145,7 +145,7 @@ contract ERC6538Registry {
 /// @notice Interface of the ERC1271 standard signature validation method for contracts as defined
 /// in https://eips.ethereum.org/EIPS/eip-1271[ERC-1271].
 interface IERC1271 {
-  /// @dev Should return whether the signature provided is valid for the provided data
+  /// @notice Should return whether the signature provided is valid for the provided data
   /// @param hash Hash of the data to be signed
   /// @param signature Signature byte array associated with _data
   function isValidSignature(bytes32 hash, bytes memory signature)
