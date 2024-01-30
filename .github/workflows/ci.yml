@@ -35,6 +35,12 @@ jobs:
       - name: Run tests
         run: forge test
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.5
+          cache: False
+
       - name: Install `jd` CLI
         run: go install github.com/josephburnett/jd@latest
 
