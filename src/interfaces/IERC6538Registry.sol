@@ -4,6 +4,9 @@ pragma solidity 0.8.23;
 /// @dev Interface for calling the `ERC6538Registry` contract to map accounts to their stealth
 /// meta-address. See [ERC-6538](https://eips.ethereum.org/EIPS/eip-6538) to learn more.
 interface IERC6538Registry {
+  /// @notice Emitted when an invalid signature is provided to `registerKeysOnBehalf`.
+  error ERC6538Registry__InvalidSignature();
+
   /// @dev Emitted when a registrant updates their stealth meta-address.
   /// @param registrant The account that registered the stealth meta-address.
   /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
@@ -45,4 +48,16 @@ interface IERC6538Registry {
 
   /// @notice Returns the domain separator used in this contract.
   function DOMAIN_SEPARATOR() external view returns (bytes32);
+
+  /// @notice Returns the stealth meta-address for the given `registrant` and `schemeId`.
+  function stealthMetaAddressOf(address registrant, uint256 schemeId)
+    external
+    view
+    returns (bytes memory);
+
+  /// @notice Returns the EIP-712 type hash used in `registerKeysOnBehalf`.
+  function ERC6538REGISTRY_ENTRY_TYPE_HASH() external view returns (bytes32);
+
+  /// @notice Returns the nonce of the given `registrant`.
+  function nonceOf(address registrant) external view returns (uint256);
 }

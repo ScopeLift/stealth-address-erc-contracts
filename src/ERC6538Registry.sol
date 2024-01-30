@@ -13,9 +13,9 @@ contract ERC6538Registry {
   mapping(address registrant => mapping(uint256 schemeId => bytes)) public stealthMetaAddressOf;
 
   /// @notice A nonce used to ensure a signature can only be used once.
-  /// @dev `user` is the registrant address.
+  /// @dev `registrant` is the user address.
   /// @dev `nonce` will be incremented after each valid `registerKeysOnBehalf` call.
-  mapping(address user => uint256) public nonceOf;
+  mapping(address registrant => uint256) public nonceOf;
 
   /// @notice The EIP-712 type hash used in `registerKeysOnBehalf`.
   bytes32 public constant ERC6538REGISTRY_ENTRY_TYPE_HASH =
