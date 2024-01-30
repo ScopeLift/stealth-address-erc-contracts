@@ -66,7 +66,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
   ) external {
     (address alice, uint256 alicePk) = makeAddrAndKey(name);
     SigUtils.RegistrantInfo memory registrantInfo =
-      SigUtils.RegistrantInfo(alice, schemeId, stealthMetaAddress, 0 /* nonce */ );
+      SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, 0 /* nonce */ );
     bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
@@ -88,7 +88,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     address registrant = address(erc1271MockContract);
 
     SigUtils.RegistrantInfo memory registrantInfo =
-      SigUtils.RegistrantInfo(registrant, schemeId, stealthMetaAddress, 0 /* nonce */ );
+      SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, 0 /* nonce */ );
     bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
@@ -109,7 +109,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
 
     for (uint256 nonce = 0; nonce < numOfUpdates; nonce++) {
       SigUtils.RegistrantInfo memory registrantInfo =
-        SigUtils.RegistrantInfo(alice, schemeId, stealthMetaAddress, nonce);
+        SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, nonce);
       bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
       (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
       bytes memory signature = abi.encodePacked(r, s, v);
@@ -126,9 +126,9 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     uint256 schemeId,
     bytes memory stealthMetaAddress
   ) external {
-    (address alice, uint256 alicePk) = makeAddrAndKey(name);
+    ( /*address alice */ , uint256 alicePk) = makeAddrAndKey(name);
     SigUtils.RegistrantInfo memory registrantInfo =
-      SigUtils.RegistrantInfo(alice, schemeId, stealthMetaAddress, 0 /* nonce */ );
+      SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, 0 /* nonce */ );
     bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
@@ -150,7 +150,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     address registrant = address(erc1271MockContract);
 
     SigUtils.RegistrantInfo memory registrantInfo =
-      SigUtils.RegistrantInfo(registrant, schemeId, stealthMetaAddress, 0 /* nonce */ );
+      SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, 0 /* nonce */ );
     bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
@@ -168,7 +168,7 @@ contract RegisterKeysOnBehalf_Address is ERC6538RegistryTest {
     vm.assume(nonce != 0);
     (address alice, uint256 alicePk) = makeAddrAndKey(name);
     SigUtils.RegistrantInfo memory registrantInfo =
-      SigUtils.RegistrantInfo(alice, schemeId, stealthMetaAddress, nonce);
+      SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, nonce);
     bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
     bytes memory signature = abi.encodePacked(r, s, v);
@@ -302,7 +302,6 @@ contract SigUtils {
   }
 
   struct RegistrantInfo {
-    address registrant;
     uint256 schemeId;
     bytes stealthMetaAddress;
     uint256 nonce;
@@ -312,10 +311,7 @@ contract SigUtils {
   function getStructHash(RegistrantInfo memory _info) internal pure returns (bytes32) {
     return keccak256(
       abi.encode(
-        keccak256(
-          "RegisterKeysOnBehalf(address registrant,uint256 schemeId,bytes stealthMetaAddress,uint256 nonce)"
-        ),
-        _info.registrant,
+        keccak256("Erc6538RegistryEntry(uint256 schemeId,bytes stealthMetaAddress,uint256 nonce)"),
         _info.schemeId,
         _info.stealthMetaAddress,
         _info.nonce
