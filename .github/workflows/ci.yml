@@ -51,9 +51,10 @@ jobs:
 
       - name: Ensure correctness of the `IERC6538Registry` interface
         run: |
-          diff=$(jd -set <(jq '.abi' out/ERC6538Registry.sol/ERC6538Registry.json) <(jq '.abi' out/IERC6538Registry.sol/IERC6538Registry.json))
-          expected_diff="@ [[\"set\"],{}] - {\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}"
-          if [[ $diff != $expected_diff ]]; then exit 1; fi
+          echo $(jd -set <(jq '.abi' out/ERC6538Registry.sol/ERC6538Registry.json) <(jq '.abi' out/IERC6538Registry.sol/IERC6538Registry.json)) > diff.txt
+          echo "@ [[\"set\"],{}] - {\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}" > expected_diff.txt
+          diff=$(diff diff.txt expected_diff.txt)
+          if [[ -n $diff ]]; then exit 1; fi
 
   coverage:
     runs-on: ubuntu-latest
