@@ -23,7 +23,7 @@ interface IERC6538Registry {
   /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
   /// secp256k1, as specified in ERC-5564.
   /// @param stealthMetaAddress The stealth meta-address to register.
-  function registerKeys(uint256 schemeId, bytes memory stealthMetaAddress) external;
+  function registerKeys(uint256 schemeId, bytes calldata stealthMetaAddress) external;
 
   /// @notice Sets the `registrant`'s stealth meta-address for the given scheme ID.
   /// @param registrant Address of the registrant.
@@ -37,6 +37,12 @@ interface IERC6538Registry {
     address registrant,
     uint256 schemeId,
     bytes memory signature,
-    bytes memory stealthMetaAddress
+    bytes calldata stealthMetaAddress
   ) external;
+
+  /// @notice Increments the nonce of the sender to invalidate existing signatures.
+  function incrementNonce() external;
+
+  /// @notice Returns the domain separator used in this contract.
+  function DOMAIN_SEPARATOR() external view returns (bytes32);
 }
