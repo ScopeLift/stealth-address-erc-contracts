@@ -20,7 +20,7 @@ contract ERC6538RegistryTest is Test, Deploy {
 }
 
 contract Constructor is ERC6538RegistryTest {
-  function test_DomainSeparatorIsInitializedCorrectly() external {
+  function test_TheDomainSeparatorIsInitializedCorrectly() external {
     assertEq(
       registry.DOMAIN_SEPARATOR(),
       keccak256(
@@ -39,7 +39,7 @@ contract Constructor is ERC6538RegistryTest {
 }
 
 contract RegisterKeys is ERC6538RegistryTest {
-  function testFuzz_EmitsStealthMetaAddressSetEvent(
+  function testFuzz_EmitsStealthMetaAddressSetEventForAnyCaller(
     address caller,
     uint256 schemeId,
     bytes memory stealthMetaAddress
@@ -50,7 +50,7 @@ contract RegisterKeys is ERC6538RegistryTest {
     registry.registerKeys(schemeId, stealthMetaAddress);
   }
 
-  function testFuzz_CorrectlyMapsRegistrantToSchemeIdToStealthMetaAddressInStorage(
+  function testFuzz_MapsRegistrantToSchemeIdToStealthMetaAddressInStorageCorrectlyForAnyCaller(
     address caller,
     uint256 schemeId,
     bytes memory stealthMetaAddress
@@ -67,7 +67,7 @@ contract RegisterKeys is ERC6538RegistryTest {
   /// forge-config: default.fuzz.runs = 1
   /// forge-config: ci.fuzz.runs = 1
   /// forge-config: lite.fuzz.runs = 1
-  function testFuzz_AlwaysSucceeds(
+  function testFuzz_AlwaysSucceedsForACallerThatCallsTheRegisterKeysFunction(
     address caller,
     uint256 schemeId,
     bytes memory stealthMetaAddress
@@ -78,7 +78,23 @@ contract RegisterKeys is ERC6538RegistryTest {
 }
 
 contract RegisterKeysOnBehalf is ERC6538RegistryTest {
-  function testFuzz_Erc712SignatureIsValid(
+  function testFuzz_SetsTheStealthMetaAddressForANewRegistrantWhenProvidedAValidErc712Signature(
+    string memory name,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress
+  ) external {
+    (address alice, uint256 alicePk) = makeAddrAndKey(name);
+    SigUtils.RegistrantInfo memory registrantInfo =
+      SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, 0 /* nonce */ );
+    bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
+    assertEq(registry.stealthMetaAddressOf(alice, schemeId), stealthMetaAddress);
+  }
+
+  function testFuzz_EmitsAStealthMetaAddressSetEventForANewRegistrantWhenProvidedAValidErc712Signature(
     string memory name,
     uint256 schemeId,
     bytes memory stealthMetaAddress
@@ -95,7 +111,28 @@ contract RegisterKeysOnBehalf is ERC6538RegistryTest {
     registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
   }
 
-  function testFuzz_Erc1271SignatureIsValid(
+  function testFuzz_SetsTheStealthMetaAddressForANewRegistrantWhenProvidedAValidErc1271Signature(
+    string memory name,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress
+  ) external {
+    (address alice, uint256 alicePk) = makeAddrAndKey(name);
+
+    vm.prank(alice);
+    ERC1271MockContract erc1271MockContract = new ERC1271MockContract();
+    address registrant = address(erc1271MockContract);
+
+    SigUtils.RegistrantInfo memory registrantInfo =
+      SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, 0 /* nonce */ );
+    bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress);
+    assertEq(registry.stealthMetaAddressOf(registrant, schemeId), stealthMetaAddress);
+  }
+
+  function testFuzz_EmitsAStealthMetaAddressSetEventForANewRegistrantWhenProvidedAValidErc1271Signature(
     string memory name,
     uint256 schemeId,
     bytes memory stealthMetaAddress
@@ -117,7 +154,28 @@ contract RegisterKeysOnBehalf is ERC6538RegistryTest {
     registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress);
   }
 
-  function testFuzz_UpdateStealthMetaAddress(
+  function testFuzz_SetsTheStealthMetaAddressForTheSameRegistrantAtLeastTwiceWhenProvidedAValidErc712Signature(
+    string memory name,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress,
+    uint256 numOfUpdates
+  ) external {
+    numOfUpdates = bound(numOfUpdates, 1, 50);
+    (address alice, uint256 alicePk) = makeAddrAndKey(name);
+
+    for (uint256 nonce = 0; nonce < numOfUpdates; nonce++) {
+      SigUtils.RegistrantInfo memory registrantInfo =
+        SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, nonce);
+      bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
+      (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
+      bytes memory signature = abi.encodePacked(r, s, v);
+
+      registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
+      assertEq(registry.stealthMetaAddressOf(alice, schemeId), stealthMetaAddress);
+    }
+  }
+
+  function testFuzz_EmitsStealthMetaAddressSetEventsForTheSameRegistrantAtLeastTwiceWhenProvidedAValidErc712Signature(
     string memory name,
     uint256 schemeId,
     bytes memory stealthMetaAddress,
@@ -139,7 +197,62 @@ contract RegisterKeysOnBehalf is ERC6538RegistryTest {
     }
   }
 
-  function testFuzz_RevertIf_Erc712SignatureIsNotValid(
+  function testFuzz_SetsTheStealthMetaAddressForTheSameRegistrantAtLeastTwiceWhenProvidedAValidErc1271Signature(
+    string memory name,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress,
+    uint256 numOfUpdates
+  ) external {
+    numOfUpdates = bound(numOfUpdates, 1, 50);
+
+    (address alice, uint256 alicePk) = makeAddrAndKey(name);
+
+    vm.prank(alice);
+    ERC1271MockContract erc1271MockContract = new ERC1271MockContract();
+
+    for (uint256 nonce = 0; nonce < numOfUpdates; nonce++) {
+      SigUtils.RegistrantInfo memory registrantInfo =
+        SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, nonce);
+      (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, sigUtils.getTypedDataHash(registrantInfo));
+      bytes memory signature = abi.encodePacked(r, s, v);
+
+      registry.registerKeysOnBehalf(
+        address(erc1271MockContract), schemeId, signature, stealthMetaAddress
+      );
+      assertEq(
+        registry.stealthMetaAddressOf(address(erc1271MockContract), schemeId), stealthMetaAddress
+      );
+    }
+  }
+
+  function testFuzz_EmitsStealthMetaAddressSetEventsForTheSameRegistrantAtLeastTwiceWhenProvidedAValidErc1271Signature(
+    string memory name,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress,
+    uint256 numOfUpdates
+  ) external {
+    numOfUpdates = bound(numOfUpdates, 1, 50);
+
+    (address alice, uint256 alicePk) = makeAddrAndKey(name);
+
+    vm.prank(alice);
+    ERC1271MockContract erc1271MockContract = new ERC1271MockContract();
+
+    for (uint256 nonce = 0; nonce < numOfUpdates; nonce++) {
+      SigUtils.RegistrantInfo memory registrantInfo =
+        SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, nonce);
+      (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, sigUtils.getTypedDataHash(registrantInfo));
+      bytes memory signature = abi.encodePacked(r, s, v);
+
+      vm.expectEmit(true, true, true, true);
+      emit StealthMetaAddressSet(address(erc1271MockContract), schemeId, stealthMetaAddress);
+      registry.registerKeysOnBehalf(
+        address(erc1271MockContract), schemeId, signature, stealthMetaAddress
+      );
+    }
+  }
+
+  function testFuzz_RevertIf_AnErc712SignatureFromAnAddressIsDifferentFromTheOneBeingRegistered(
     string memory name,
     address bob,
     uint256 schemeId,
@@ -156,7 +269,7 @@ contract RegisterKeysOnBehalf is ERC6538RegistryTest {
     registry.registerKeysOnBehalf(bob, schemeId, signature, stealthMetaAddress);
   }
 
-  function testFuzz_RevertIf_Erc1271SignatureIsNotValid(
+  function testFuzz_RevertIf_AnErc1271SignatureFromAnAddressIsDifferentFromTheOneBeingRegistered(
     string memory name,
     address bob,
     uint256 schemeId,
@@ -178,7 +291,7 @@ contract RegisterKeysOnBehalf is ERC6538RegistryTest {
     registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress);
   }
 
-  function testFuzz_RevertIf_WrongNonce(
+  function testFuzz_RevertIf_ANewRegistrantProvidesAnErc712SignatureWithANonceOtherThanZero(
     string memory name,
     uint256 schemeId,
     bytes memory stealthMetaAddress,
@@ -195,26 +308,61 @@ contract RegisterKeysOnBehalf is ERC6538RegistryTest {
     registry.registerKeysOnBehalf(alice, schemeId, signature, stealthMetaAddress);
   }
 
-  function test_RevertIf_NoSignatureIsProvided() external {
+  function testFuzz_RevertIf_ANewRegistrantProvidesAnErc1271SignatureWithANonceOtherThanZero(
+    string memory name,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress,
+    uint256 nonce
+  ) external {
+    vm.assume(nonce != 0);
+    (address alice, uint256 alicePk) = makeAddrAndKey(name);
+
+    vm.prank(alice);
+    ERC1271MockContract erc1271MockContract = new ERC1271MockContract();
+
+    SigUtils.RegistrantInfo memory registrantInfo =
+      SigUtils.RegistrantInfo(schemeId, stealthMetaAddress, nonce);
+    bytes32 hash = sigUtils.getTypedDataHash(registrantInfo);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, hash);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    vm.expectRevert(ERC6538Registry__InvalidSignature.selector);
+    registry.registerKeysOnBehalf(
+      address(erc1271MockContract), schemeId, signature, stealthMetaAddress
+    );
+  }
+
+  function testFuzz_RevertIf_AnEmptySignatureIsUsedToRegisterKeysForANewRegistrant(
+    address registrant,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress
+  ) external {
     vm.expectRevert();
-    registry.registerKeysOnBehalf(address(0), 0, "", "");
+    registry.registerKeysOnBehalf(registrant, schemeId, "", stealthMetaAddress);
   }
 }
 
 contract IncrementNonce is ERC6538RegistryTest {
-  function testFuzz_IncrementCallerNonceCorrectly(address registrant) external {
+  function testFuzz_IncrementsTheNonceOfTheCallerByOneNTimesEachTimeTheIncrementNonceFunctionIsCalledByTheCaller(
+    address registrant,
+    uint256 numOfCalls
+  ) external {
+    numOfCalls = bound(numOfCalls, 2, 50);
     uint256 nonce = registry.nonceOf(address(registrant));
-    vm.startPrank(registrant);
-    registry.incrementNonce();
-    assertEq(registry.nonceOf(registrant), nonce + 1);
-    registry.incrementNonce();
-    assertEq(registry.nonceOf(registrant), nonce + 2);
-    vm.stopPrank();
+
+    for (uint256 i = 1; i < numOfCalls; i++) {
+      vm.startPrank(registrant);
+      registry.incrementNonce();
+      assertEq(registry.nonceOf(registrant), nonce + i);
+      vm.stopPrank();
+    }
   }
 }
 
 contract Domain_Separator is ERC6538RegistryTest {
-  function testFuzz_UpdateDomainSeparatorAfterChainSplit(uint256 chainId) external {
+  function testFuzz_ChecksTheDomainSeparatorOfTheErc6538RegistryContractAfterAChainSplitIsRecomputedWithTheNewChainId(
+    uint256 chainId
+  ) external {
     chainId = bound(chainId, 1, 1_000_000);
     vm.chainId(chainId);
     assertEq(
