@@ -19,7 +19,7 @@ contract ERC5564AnnouncerTest is Test, Deploy {
 }
 
 contract Announce is ERC5564AnnouncerTest {
-  function testFuzz_EmitsAnnouncementEventForAnyCaller(
+  function testFuzz_EmitsAnnouncementEvent(
     uint256 schemeId,
     address stealthAddress,
     address caller,
@@ -38,7 +38,7 @@ contract Announce is ERC5564AnnouncerTest {
   /// forge-config: default.fuzz.runs = 1
   /// forge-config: ci.fuzz.runs = 1
   /// forge-config: lite.fuzz.runs = 1
-  function testFuzz_AlwaysSucceedsForAnyCallerThatCallsTheAnnounceFunction(
+  function testFuzz_AlwaysSucceeds(
     uint256 schemeId,
     address stealthAddress,
     address caller,

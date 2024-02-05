@@ -131,7 +131,7 @@ contract ERC6538Registry {
     return keccak256(
       abi.encode(
         keccak256(
-          "EIP712Domain(string name,string version,uint256 chainId,address registryContract)"
+          "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         ),
         keccak256("ERC6538Registry"),
         keccak256("1.0"),
