@@ -1,9 +1,12 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.23;
 
 /// @dev Interface for calling the `ERC6538Registry` contract to map accounts to their stealth
 /// meta-address. See [ERC-6538](https://eips.ethereum.org/EIPS/eip-6538) to learn more.
 interface IERC6538Registry {
+  /// @notice Emitted when an invalid signature is provided to `registerKeysOnBehalf`.
+  error ERC6538Registry__InvalidSignature();
+
   /// @dev Emitted when a registrant updates their stealth meta-address.
   /// @param registrant The account that registered the stealth meta-address.
   /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
@@ -16,14 +19,14 @@ interface IERC6538Registry {
   /// therefore this `stealthMetaAddress` is just the `spendingPubKey` and `viewingPubKey`
   /// concatenated.
   event StealthMetaAddressSet(
-    bytes indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
+    address indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
   );
 
   /// @notice Sets the caller's stealth meta-address for the given scheme ID.
   /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
   /// secp256k1, as specified in ERC-5564.
   /// @param stealthMetaAddress The stealth meta-address to register.
-  function registerKeys(uint256 schemeId, bytes memory stealthMetaAddress) external;
+  function registerKeys(uint256 schemeId, bytes calldata stealthMetaAddress) external;
 
   /// @notice Sets the `registrant`'s stealth meta-address for the given scheme ID.
   /// @param registrant Address of the registrant.
@@ -37,21 +40,24 @@ interface IERC6538Registry {
     address registrant,
     uint256 schemeId,
     bytes memory signature,
-    bytes memory stealthMetaAddress
+    bytes calldata stealthMetaAddress
   ) external;
 
-  /// @notice Sets the `registrant`s stealth meta-address for the given scheme ID.
-  /// @param registrant Recipient identifier, such as an address.
-  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
-  /// secp256k1, as specified in ERC-5564.
-  /// @param signature A signature from the `registrant` authorizing the registration.
-  /// @param stealthMetaAddress The stealth meta-address to register.
-  /// @dev Supports both EOA signatures and EIP-1271 signatures.
-  /// @dev Reverts if the signature is invalid.
-  function registerKeysOnBehalf(
-    bytes memory registrant,
-    uint256 schemeId,
-    bytes memory signature,
-    bytes memory stealthMetaAddress
-  ) external;
+  /// @notice Increments the nonce of the sender to invalidate existing signatures.
+  function incrementNonce() external;
+
+  /// @notice Returns the domain separator used in this contract.
+  function DOMAIN_SEPARATOR() external view returns (bytes32);
+
+  /// @notice Returns the stealth meta-address for the given `registrant` and `schemeId`.
+  function stealthMetaAddressOf(address registrant, uint256 schemeId)
+    external
+    view
+    returns (bytes memory);
+
+  /// @notice Returns the EIP-712 type hash used in `registerKeysOnBehalf`.
+  function ERC6538REGISTRY_ENTRY_TYPE_HASH() external view returns (bytes32);
+
+  /// @notice Returns the nonce of the given `registrant`.
+  function nonceOf(address registrant) external view returns (uint256);
 }

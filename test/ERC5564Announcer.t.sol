@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.20;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {Deploy} from "script/Deploy.s.sol";
@@ -38,7 +38,7 @@ contract Announce is ERC5564AnnouncerTest {
   /// forge-config: default.fuzz.runs = 1
   /// forge-config: ci.fuzz.runs = 1
   /// forge-config: lite.fuzz.runs = 1
-  function testFuzz_NeverReverts(
+  function testFuzz_AlwaysSucceeds(
     uint256 schemeId,
     address stealthAddress,
     address caller,
