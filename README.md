@@ -11,13 +11,9 @@ This repo is developed using [Foundry](https://book.getfoundry.sh/).
 
 ### Setup
 
-1. Install [Foundry](https://book.getfoundry.sh/getting-started/installation) on your local machine by opening the terminal and running the following command:
+1. Install Foundry on your local machine by following the [instructions here](https://book.getfoundry.sh/getting-started/installation).
 
-```sh
-curl -L https://foundry.paradigm.xyz | bash
-```
-
-2. Clone the repo and navigate to the root directory of the repo.
+2. Clone the repo and navigate to the root directory of the repo:
 
 ```sh
 git clone git@github.com:ScopeLift/stealth-address-erc-contracts.git
@@ -45,22 +41,34 @@ forge test
 forge coverage
 ```
 
-### Specifications
+### Linting and Specifications
 
-#### Pre-requisites
+This project uses [scopelint](https://github.com/ScopeLift/scopelint) for linting and spec generation. Follow [these instructions](https://github.com/ScopeLift/scopelint?tab=readme-ov-file#installation) to install it.
 
-1. Install the [rust toolchain](https://www.rust-lang.org/tools/install).
-2. Run `cargo install scopelint`
+#### Lint
 
-#### See contract specifications
+```bash
+# Check formatting
+scopelint check
+# Apply formatting changes
+scopelint fmt
+```
 
-```sh
+#### Spec
+
+```bash
 scopelint spec
 ```
 
+This command will use the names of the contract's unit tests to generate a human readable spec. It will list each contract, its constituent functions, and the human readable description of functionality each unit test aims to assert.
+
 ## Deployments
 
+Coming soon.
+
 ## Security
+
+Coming soon.
 
 ## License
 
