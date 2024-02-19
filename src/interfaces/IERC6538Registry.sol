@@ -22,6 +22,11 @@ interface IERC6538Registry {
     address indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
   );
 
+  /// @notice Emitted when a registrant increments their nonce.
+  /// @param registrant The account that incremented the nonce.
+  /// @param newNonce The new nonce value.
+  event NonceIncremented(address indexed registrant, uint256 newNonce);
+
   /// @notice Sets the caller's stealth meta-address for the given scheme ID.
   /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
   /// secp256k1, as specified in ERC-5564.
