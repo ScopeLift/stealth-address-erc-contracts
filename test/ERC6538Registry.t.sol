@@ -11,6 +11,7 @@ contract ERC6538RegistryTest is Test, Deploy {
   event StealthMetaAddressSet(
     address indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
   );
+  event NonceIncremented(address indexed registrant, uint256 newNonce);
 
   function setUp() public {
     Deploy.run();
@@ -54,6 +55,32 @@ contract ERC6538RegistryTest is Test, Deploy {
     // messages. It is used in tests where we want assert a function reverts without a message.
     vm.assume(_address != address(vm));
     vm.assume(_address != address(address(0x000000000000000000636F6e736F6c652e6c6f67)));
+  }
+
+  function manipulateSignature(bytes memory signature) public pure returns (bytes memory) {
+    (uint8 v, bytes32 r, bytes32 s) = splitSignature(signature);
+
+    uint8 manipulatedV = v % 2 == 0 ? v - 1 : v + 1;
+    uint256 manipulatedS = modNegS(uint256(s));
+    bytes memory manipulatedSignature = abi.encodePacked(r, bytes32(manipulatedS), manipulatedV);
+
+    return manipulatedSignature;
+  }
+
+  function splitSignature(bytes memory sig) public pure returns (uint8 v, bytes32 r, bytes32 s) {
+    require(sig.length == 65, "Invalid signature length");
+    assembly {
+      r := mload(add(sig, 32))
+      s := mload(add(sig, 64))
+      v := byte(0, mload(add(sig, 96)))
+    }
+    if (v < 27) v += 27;
+    require(v == 27 || v == 28, "Invalid signature v value");
+  }
+
+  function modNegS(uint256 s) public pure returns (uint256) {
+    uint256 n = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141;
+    return n - s;
   }
 }
 
@@ -305,6 +332,38 @@ contract RegisterKeysOnBehalf is ERC6538RegistryTest {
     registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress);
   }
 
+  function testFuzz_RevertIf_AManipulatedErc712SignatureIsUsedToRegister(
+    string memory registrantSeed,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress
+  ) external {
+    (address registrant, uint256 registrantPrivateKey) = makeAddrAndKey(registrantSeed);
+    bytes memory signature =
+      _generateRegistrationSignature(registrantPrivateKey, schemeId, stealthMetaAddress, 0);
+    bytes memory manipulatedSignature = manipulateSignature(signature);
+
+    vm.expectRevert(bytes(""));
+    registry.registerKeysOnBehalf(registrant, schemeId, manipulatedSignature, stealthMetaAddress);
+  }
+
+  function testFuzz_RevertIf_AManipulatedErc712SignatureIsUsedToRegisterADifferentStealthMetaAddress(
+    string memory registrantSeed,
+    uint256 schemeId,
+    bytes memory stealthMetaAddress,
+    bytes memory attackerStealthMetaAddress
+  ) external {
+    vm.assume(keccak256(stealthMetaAddress) != keccak256(attackerStealthMetaAddress));
+    (address registrant, uint256 registrantPrivateKey) = makeAddrAndKey(registrantSeed);
+    bytes memory signature =
+      _generateRegistrationSignature(registrantPrivateKey, schemeId, stealthMetaAddress, 0);
+    bytes memory manipulatedSignature = manipulateSignature(signature);
+
+    vm.expectRevert(bytes(""));
+    registry.registerKeysOnBehalf(
+      registrant, schemeId, manipulatedSignature, attackerStealthMetaAddress
+    );
+  }
+
   function testFuzz_RevertIf_TheErc1271SignatureIsNotValid(
     uint256 schemeId,
     bytes memory stealthMetaAddress,
@@ -338,6 +397,14 @@ contract IncrementNonce is ERC6538RegistryTest {
 
       assertEq(registry.nonceOf(registrant), i);
     }
+  }
+
+  function testFuzz_EmitsANonceIncrementedEvent(address registrant) external {
+    uint256 expectedNonce = registry.nonceOf(registrant) + 1;
+    vm.expectEmit();
+    emit NonceIncremented(registrant, expectedNonce);
+    vm.prank(registrant);
+    registry.incrementNonce();
   }
 }
 
