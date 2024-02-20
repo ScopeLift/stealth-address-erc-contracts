@@ -332,20 +332,6 @@ contract RegisterKeysOnBehalf is ERC6538RegistryTest {
     registry.registerKeysOnBehalf(registrant, schemeId, signature, stealthMetaAddress);
   }
 
-  function testFuzz_RevertIf_AManipulatedErc712SignatureIsUsedToRegister(
-    string memory registrantSeed,
-    uint256 schemeId,
-    bytes memory stealthMetaAddress
-  ) external {
-    (address registrant, uint256 registrantPrivateKey) = makeAddrAndKey(registrantSeed);
-    bytes memory signature =
-      _generateRegistrationSignature(registrantPrivateKey, schemeId, stealthMetaAddress, 0);
-    bytes memory manipulatedSignature = manipulateSignature(signature);
-
-    vm.expectRevert(bytes(""));
-    registry.registerKeysOnBehalf(registrant, schemeId, manipulatedSignature, stealthMetaAddress);
-  }
-
   function testFuzz_RevertIf_AManipulatedErc712SignatureIsUsedToRegisterADifferentStealthMetaAddress(
     string memory registrantSeed,
     uint256 schemeId,

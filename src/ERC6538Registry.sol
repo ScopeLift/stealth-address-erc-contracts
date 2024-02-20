@@ -101,11 +101,7 @@ contract ERC6538Registry {
         s := mload(add(signature, 0x40))
         v := byte(0, mload(add(signature, 0x60)))
       }
-
-      // If the signature is valid and not malleable, `ecrecover` returns the signing address.
-      if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {} else {
-        recoveredAddress = ecrecover(dataHash, v, r, s);
-      }
+      recoveredAddress = ecrecover(dataHash, v, r, s);
     }
 
     if (
