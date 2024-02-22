@@ -254,7 +254,7 @@ contract RegisterKeysOnBehalf is ERC6538RegistryTest {
     }
   }
 
-  function testFuzz_AManipulatedErc712SignatureIsUsedToRegisterTheSameStealthMetaAddress(
+  function testFuzz_SetsTheCorrectStealthMetaAddressEvenIfAnErc712SignatureManipulatedViaSignatureMalleabilityIsUsedToRegister(
     string memory registrantSeed,
     uint256 schemeId,
     bytes memory stealthMetaAddress
