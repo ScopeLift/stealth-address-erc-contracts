@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity 0.8.23;
 
 /// @notice `ERC6538Registry` contract to map accounts to their stealth meta-address. See

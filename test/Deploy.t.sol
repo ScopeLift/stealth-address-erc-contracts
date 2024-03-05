@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity 0.8.23;
 
 import {Deploy} from "script/Deploy.s.sol";
@@ -20,9 +20,9 @@ contract DeployTest is Test, Deploy {
     bytes memory erc6538CreationCode = abi.encodePacked(type(ERC6538Registry).creationCode);
 
     address erc5564ComputedAddress =
-      computeCreate2Address(salt, keccak256(erc5564CreationCode), deployer);
+      computeCreate2Address(ERC5564Salt, keccak256(erc5564CreationCode), deployer);
     address erc6538ComputedAddress =
-      computeCreate2Address(salt, keccak256(erc6538CreationCode), deployer);
+      computeCreate2Address(ERC6538Salt, keccak256(erc6538CreationCode), deployer);
 
     require(erc5564ComputedAddress.code.length == 0);
     require(erc6538ComputedAddress.code.length == 0);
