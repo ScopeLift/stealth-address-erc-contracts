@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity 0.8.23;
 
 /// @notice Interface for calling the `ERC5564Announcer` contract, which emits an `Announcement`
