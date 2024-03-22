@@ -12,7 +12,7 @@ contract Deploy is Script {
   ERC6538Registry registry;
   address deployer = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
   bytes32 ERC5564Salt = 0xd0103a290d760f027c9ca72675f5121d725397fb2f618f05b6c44958b25b4447;
-  bytes32 ERC6538Salt = 0x0883790c70e6bce521db2517ae9873b2627580f5945fb2026117ab9d15ba9387;
+  bytes32 ERC6538Salt = 0x7cac4e512b1768c627c9e711c7a013f1ad0766ef5125c59fb7161dade58da078;
 
   function run() public {
     bytes memory ERC5564CreationCode = abi.encodePacked(type(ERC5564Announcer).creationCode);
