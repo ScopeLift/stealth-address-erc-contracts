@@ -43,7 +43,12 @@ contract ERC6538RegistryTest is Test, Deploy {
     uint256 _nonce
   ) public view returns (bytes memory _signature) {
     bytes32 _dataHash = keccak256(
-      abi.encode(registry.ERC6538REGISTRY_ENTRY_TYPE_HASH(), _schemeId, _stealthMetaAddress, _nonce)
+      abi.encode(
+        registry.ERC6538REGISTRY_ENTRY_TYPE_HASH(),
+        _schemeId,
+        keccak256(_stealthMetaAddress),
+        _nonce
+      )
     );
     bytes32 _hash = keccak256(abi.encodePacked("\x19\x01", registry.DOMAIN_SEPARATOR(), _dataHash));
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(_registrantPrivateKey, _hash);
