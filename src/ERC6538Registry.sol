@@ -80,7 +80,10 @@ contract ERC6538Registry {
           DOMAIN_SEPARATOR(),
           keccak256(
             abi.encode(
-              ERC6538REGISTRY_ENTRY_TYPE_HASH, schemeId, stealthMetaAddress, nonceOf[registrant]++
+              ERC6538REGISTRY_ENTRY_TYPE_HASH,
+              schemeId,
+              keccak256(stealthMetaAddress),
+              nonceOf[registrant]++
             )
           )
         )
