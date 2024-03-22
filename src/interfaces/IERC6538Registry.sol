@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity 0.8.23;
 
 /// @dev Interface for calling the `ERC6538Registry` contract to map accounts to their stealth
@@ -9,7 +9,7 @@ interface IERC6538Registry {
 
   /// @dev Emitted when a registrant updates their stealth meta-address.
   /// @param registrant The account that registered the stealth meta-address.
-  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
   /// secp256k1, as specified in ERC-5564.
   /// @param stealthMetaAddress The stealth meta-address.
   /// [ERC-5564](https://eips.ethereum.org/EIPS/eip-5564) bases the format for stealth
@@ -22,15 +22,20 @@ interface IERC6538Registry {
     address indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
   );
 
+  /// @notice Emitted when a registrant increments their nonce.
+  /// @param registrant The account that incremented the nonce.
+  /// @param newNonce The new nonce value.
+  event NonceIncremented(address indexed registrant, uint256 newNonce);
+
   /// @notice Sets the caller's stealth meta-address for the given scheme ID.
-  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
   /// secp256k1, as specified in ERC-5564.
   /// @param stealthMetaAddress The stealth meta-address to register.
   function registerKeys(uint256 schemeId, bytes calldata stealthMetaAddress) external;
 
   /// @notice Sets the `registrant`'s stealth meta-address for the given scheme ID.
   /// @param registrant Address of the registrant.
-  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 0 for
+  /// @param schemeId Identifier corresponding to the applied stealth address scheme, e.g. 1 for
   /// secp256k1, as specified in ERC-5564.
   /// @param signature A signature from the `registrant` authorizing the registration.
   /// @param stealthMetaAddress The stealth meta-address to register.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 // slither-disable-start reentrancy-benign
 
 pragma solidity 0.8.23;
@@ -11,21 +11,22 @@ contract Deploy is Script {
   ERC5564Announcer announcer;
   ERC6538Registry registry;
   address deployer = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
-  bytes32 salt = "";
+  bytes32 ERC5564Salt = 0xd0103a290d760f027c9ca72675f5121d725397fb2f618f05b6c44958b25b4447;
+  bytes32 ERC6538Salt = 0x7cac4e512b1768c627c9e711c7a013f1ad0766ef5125c59fb7161dade58da078;
 
   function run() public {
     bytes memory ERC5564CreationCode = abi.encodePacked(type(ERC5564Announcer).creationCode);
     bytes memory ERC6538CreationCode = abi.encodePacked(type(ERC6538Registry).creationCode);
     address ERC5564ComputedAddress =
-      computeCreate2Address(salt, keccak256(ERC5564CreationCode), deployer);
+      computeCreate2Address(ERC5564Salt, keccak256(ERC5564CreationCode), deployer);
     address ERC6538ComputedAddress =
-      computeCreate2Address(salt, keccak256(ERC6538CreationCode), deployer);
+      computeCreate2Address(ERC6538Salt, keccak256(ERC6538CreationCode), deployer);
 
     vm.broadcast();
-    announcer = new ERC5564Announcer{salt: salt}();
+    announcer = new ERC5564Announcer{salt: ERC5564Salt}();
 
     vm.broadcast();
-    registry = new ERC6538Registry{salt: salt}();
+    registry = new ERC6538Registry{salt: ERC6538Salt}();
 
     require(address(announcer) == ERC5564ComputedAddress, "announce address mismatch");
     require(address(registry) == ERC6538ComputedAddress, "registry address mismatch");
