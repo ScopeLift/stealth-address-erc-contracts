@@ -64,7 +64,28 @@ This command will use the names of the contract's unit tests to generate a human
 
 ## Deployments
 
-Coming soon.
+The stealth contracts are deployed at the following addresses:
+
+`ERC5564Announcer`: 0x55649E01B5Df198D18D95b5cc5051630cfD45564
+
+`ERC6538Registry`: 0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538
+
+_If you've deployed the contracts on networks other than the ones currently listed, please submit a pull request to update the deployment table with the relevant block scanner links. Thank you!_
+
+### Ethereum Test Networks
+
+| Networks |                                                          ERC5564Announcer                                                          |                                                          ERC6538Registry                                                           |
+| :------- | :--------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: |
+| Sepolia  | [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://sepolia.etherscan.io/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code) | [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://sepolia.etherscan.io/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code) |
+| Holešky  | [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://holesky.etherscan.io/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code) | [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://holesky.etherscan.io/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code) |
+
+### Additional EVM-Based Test Networks
+
+| Networks         |                                                              ERC5564Announcer                                                               |                                                               ERC6538Registry                                                               |
+| :--------------- | :-----------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------: |
+| Arbitrum Sepolia |      [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://sepolia.arbiscan.io/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code)      |      [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://sepolia.arbiscan.io/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code)      |
+| Base Sepolia     |     [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://sepolia.basescan.org/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code)      |     [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://sepolia.basescan.org/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code)      |
+| Optimism Sepolia | [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://sepolia-optimism.etherscan.io/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code) | [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://sepolia-optimism.etherscan.io/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code) |
 
 ## Security
 
