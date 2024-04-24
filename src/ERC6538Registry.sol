@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity 0.8.23;
 
 /// @notice `ERC6538Registry` contract to map accounts to their stealth meta-address. See
@@ -42,6 +42,11 @@ contract ERC6538Registry {
     address indexed registrant, uint256 indexed schemeId, bytes stealthMetaAddress
   );
 
+  /// @notice Emitted when a registrant increments their nonce.
+  /// @param registrant The account that incremented the nonce.
+  /// @param newNonce The new nonce value.
+  event NonceIncremented(address indexed registrant, uint256 newNonce);
+
   constructor() {
     INITIAL_CHAIN_ID = block.chainid;
     INITIAL_DOMAIN_SEPARATOR = _computeDomainSeparator();
@@ -80,7 +85,10 @@ contract ERC6538Registry {
           DOMAIN_SEPARATOR(),
           keccak256(
             abi.encode(
-              ERC6538REGISTRY_ENTRY_TYPE_HASH, schemeId, stealthMetaAddress, nonceOf[registrant]++
+              ERC6538REGISTRY_ENTRY_TYPE_HASH,
+              schemeId,
+              keccak256(stealthMetaAddress),
+              nonceOf[registrant]++
             )
           )
         )
@@ -118,6 +126,7 @@ contract ERC6538Registry {
     unchecked {
       nonceOf[msg.sender]++;
     }
+    emit NonceIncremented(msg.sender, nonceOf[msg.sender]);
   }
 
   /// @notice Returns the domain separator used in this contract.
