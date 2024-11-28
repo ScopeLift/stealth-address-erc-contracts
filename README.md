@@ -98,6 +98,7 @@ _If you've deployed the contracts on networks other than the ones currently list
 | Arbitrum Sepolia |      [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://sepolia.arbiscan.io/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code)      |      [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://sepolia.arbiscan.io/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code)      |
 | Base Sepolia     |     [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://sepolia.basescan.org/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code)      |     [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://sepolia.basescan.org/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code)      |
 | Optimism Sepolia | [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://sepolia-optimism.etherscan.io/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code) | [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://sepolia-optimism.etherscan.io/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code) |
+| Odyssey Testnet  |    [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://odyssey-explorer.ithaca.xyz/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564)     |    [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://odyssey-explorer.ithaca.xyz/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538)     |
 
 ## Security
 
