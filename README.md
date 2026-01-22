@@ -83,6 +83,7 @@ _If you've deployed the contracts on networks other than the ones currently list
 | Optimism     | [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://optimistic.etherscan.io/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code) | [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://optimistic.etherscan.io/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code) |
 | Polygon      |     [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://polygonscan.com/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code)     |     [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://polygonscan.com/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code)     |
 | Scroll       |     [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://scrollscan.com/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code)      |     [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://scrollscan.com/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code)      |
+| Taiko        |      [0x55649E01B5Df198D18D95b5cc5051630cfD45564](https://taikoscan.io/address/0x55649E01B5Df198D18D95b5cc5051630cfD45564#code)       |      [0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538](https://taikoscan.io/address/0x6538E6bf4B0eBd30A8Ea093027Ac2422ce5d6538#code)       |
 
 ### Ethereum Test Networks
 
